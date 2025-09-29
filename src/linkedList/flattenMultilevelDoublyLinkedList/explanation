@@ -1,0 +1,74 @@
+https://leetcode.com/problems/flatten-a-multilevel-doubly-linked-list/
+
+Below is the theoretical explanation structured based on the intended problem (flattening a multi-level doubly-linked list) and the general approach implied by your use of an auxiliary list, which mimics a depth-first traversal using a stack.
+
+---
+
+## 1. Understanding the Question
+
+The objective is to **flatten a multi-level, doubly-linked list** into a single-level doubly-linked list.
+
+* **Input:** The `head` node of the multi-level list. Each node has `prev`, `next`, and `child` pointers.
+* **Output:** The `head` of the list after it has been flattened into a single level.
+* **Flattening Rule:** The child list must be inserted immediately after its parent node. The original `next` pointer of the parent node must be preserved and reattached to the end of the flattened child list.
+    * **Original:** $A \iff B \iff C$, where $A$ has a child $D$.
+    * **Flattened:** $A \iff D \iff E \iff \dots \iff B \iff C$.
+* **Pointers Maintenance:** All `prev` and `next` pointers must be correctly updated for the resulting doubly-linked list. The `child` pointer of every node must be set to `null`.
+* **Efficiency:** The solution should aim for **$O(N)$ time** (where $N$ is the total number of nodes) and **$O(D)$ space** (where $D$ is the maximum depth of the list, due to the stack/recursion).
+
+***
+
+## 2. Intuition
+
+The structure of the problem—processing a node, then its child, and then returning to its original `next` node—naturally suggests a **Depth-First Search (DFS)** traversal.
+
+### The DFS Strategy:
+
+1.  **Iterate:** Traverse the main list horizontally (`next`).
+2.  **Child Found:** If a node `P` has a `child` pointer to a list `C`, we must **interrupt** the main traversal.
+3.  **Save State:** The rest of the main list (starting at `P.next`) must be **saved** so we can resume it later. A **stack** (or an `ArrayList` used as a stack, as in your code) is perfect for saving these "return points."
+4.  **Insert & Dive:** Insert the child list `C` after `P`. Then, immediately start processing the child list `C`.
+5.  **Reconnect:** Once the entire child list (and all its nested children) is processed and flattened, we retrieve the saved "return point" from the stack, connect the tail of the flattened child list to it, and resume the main traversal.
+
+### Key Pointer Steps for Insertion:
+
+When node `P` has a child `C` and a next node `N`:
+1.  **Save $N$ (Stack/List):** Push $N$ onto the stack.
+2.  **Parent Links:**
+    * `P.next = C`
+    * `C.prev = P`
+3.  **Cleanup:** `P.child = null`
+
+***
+
+## 3. Code-Wise Explanation (Based on the Stack-Based DFS Approach)
+
+Your code attempts to implement the stack-based DFS but misses the crucial step of finding the **tail** of the flattened child list to re-link the saved `next` node.
+
+1.  **Initialization:**
+    * `Node temp = head;`: The main traversal pointer, moving horizontally.
+    * `List<Node> nex = new ArrayList<>();`: This list acts as a **Stack**, storing the nodes we need to return to after finishing a child branch. It stores the original `temp.next` nodes.
+
+2.  **Main Traversal Loop:**
+    * `while(temp!=null)`: The loop continues until the end of the current flattened line.
+
+3.  **Handling a Child Node (The "Dive"):**
+    * `if(temp.child!=null)`: If a child is found:
+        * `if(temp.next!=null){ nex.add(temp.next); }`: **Saves the return point.** If `temp` has a node *after* it, this node is pushed onto the stack/list to be reconnected later.
+        * `helper(temp);`: Calls the `helper` function to perform the link updates.
+        * `continue;`: Skips `temp = temp.next` because the `helper` function has already effectively moved the flow to the child list.
+
+4.  **Helper Function Logic (Incomplete Linking):**
+    * The `helper(temp)` only performs the **immediate link update** (parent $\to$ child and child $\to$ parent) and sets `temp.child = null`. **Crucially, it does not find the tail of the child list.**
+
+5.  **Reconnecting the Saved `next` (The "Emerge"):**
+    * `if(!nex.isEmpty() && temp.next==null)`: This block correctly checks if the current traversal has reached the end of a line (`temp.next == null`) and if there is a saved node to reconnect.
+    * `temp.next = nex.get(nex.size()-1);`: **Link Tail to Saved Head:** Connects the tail of the current list segment to the saved node from the stack.
+    * `nex.get(nex.size()-1).prev = temp;`: Updates the `prev` pointer of the saved node.
+    * `nex.remove(nex.size()-1);`: Pops the saved node from the stack.
+    * *Flaw:* This reconnection logic **only works if the `temp` pointer is already at the very tail** of the flattened child branch (including all its sub-children). However, if `temp.child` was hit, the code continues to the next loop iteration, meaning `temp` *doesn't* necessarily go to the tail before hitting this block. **The logic needs to ensure `temp` reaches the full tail of the flattened child list before reconnecting.**
+
+6.  **Advancement:**
+    * `temp = temp.next;`: Moves the traversal pointer forward.
+
+The intended successful implementation would use the `helper` or a modified main loop to ensure that when a child is processed, the traversal continues **down that child branch until it hits the true tail**, and *then* reconnects the saved `next` node. The current approach separates these steps incorrectly, preventing a full recursive flatten.

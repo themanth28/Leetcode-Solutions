@@ -1,0 +1,48 @@
+https://leetcode.com/problems/middle-of-the-linked-list/description/
+
+## 1. Understanding the Question
+
+The objective is to find the **middle node** of a singly-linked list.
+
+* **Input:** The `head` node of a singly-linked list.
+* **Output:** The middle node.
+* **Key Requirement:** We must correctly handle lists of both **odd** and **even** lengths. For an even-length list (e.g., 1 $\rightarrow$ 2 $\rightarrow$ 3 $\rightarrow$ 4), the solution is specifically required to return the **second of the two middle nodes** (node 3).
+* **Efficiency:** The solution must be **$O(n)$ time** (single pass) and **$O(1)$ space** (constant extra memory).
+
+***
+
+## 2. Intuition
+
+We solve this using the **Fast and Slow Pointer** (Tortoise and Hare) technique. This method allows us to determine the middle in a single pass without knowing the list's total length first.
+
+1.  **Initialize:** Start two pointers, **`slow`** and **`fast`**, both at the `head`.
+2.  **Move:** In each step, **`slow`** moves **one** node forward, and **`fast`** moves **two** nodes forward.
+3.  **End Condition:** When the **`fast`** pointer reaches the end of the list (meaning `fast.next` or `fast.next.next` is `null`), the **`slow`** pointer must be exactly at the middle.
+
+### Handling Even vs. Odd Lengths:
+
+The core challenge is the stopping condition and the final return value:
+
+* **Odd Length (e.g., $1 \to 2 \to 3 \to 4 \to 5$):** The loop stops when `fast` is at node 5. **`slow`** will naturally be at the middle node (3).
+* **Even Length (e.g., $1 \to 2 \to 3 \to 4$):** The loop stops when `fast` is at node 3. **`slow`** is at the *first* middle node (2). Since the requirement is the **second** middle node (3), we must advance **`slow`** one final step.
+
+The conditional return statement at the end of the code gracefully handles this difference.
+
+***
+
+## 3. Code-Wise Explanation
+
+The code uses the **Fast and Slow Pointer** pattern combined with a specialized loop condition and a final conditional check.
+
+1.  **Initialization:**
+    * `ListNode slow = head;` and `ListNode fast = head;` initialize both pointers at the start.
+
+2.  **Iteration Loop:**
+    * `while (fast.next != null && fast.next.next != null)`: This condition dictates when the traversal stops. It ensures the loop terminates only when there aren't two more nodes for `fast` to jump to.
+    * The consequence of this specific condition is that **`slow`** always stops at the **first middle node** for an even list, and the **single middle node** for an odd list.
+    * `slow = slow.next;` and `fast = fast.next.next;` advance the pointers.
+
+3.  **Final Return Condition:**
+    * `return fast.next != null ? slow.next : slow;` This is the crucial line for meeting the "second middle node" requirement for even lists.
+    * **If `fast.next != null`:** This condition is **True for even-length lists**. It means `fast` is currently pointing to the **second-to-last node** (e.g., node 3 in $1 \to 2 \to 3 \to 4$). Since `slow` is at the first middle node (2), we return **`slow.next`** (node 3), fulfilling the requirement.
+    * **Else (`fast.next == null`):** This condition is **True for odd-length lists**. It means `fast` has reached the very **last node**. Since `slow` is already correctly positioned at the single middle node, we simply return **`slow`**.

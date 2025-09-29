@@ -1,0 +1,53 @@
+https://www.geeksforgeeks.org/problems/find-length-of-loop/1
+
+## 1. Understanding the Question
+
+The objective is to find the **length of the cycle (or loop)** in a singly-linked list, if one exists.
+
+* **Input:** The `head` node of a singly-linked list, which may or may not contain a cycle.
+* **Output:** An integer representing the number of nodes in the cycle. If no cycle exists, the output should be 0.
+* **Key Concept:** The problem requires two distinct phases: first, **detecting** the cycle, and second, **measuring** the cycle length once the cycle has been confirmed.
+* **Efficiency:** The solution must be time-efficient, typically aiming for **$O(n)$ time** (where $n$ is the total number of nodes) and **$O(1)$ space**.
+
+***
+
+## 2. Intuition
+
+The solution builds directly upon the **Fast and Slow Pointer** (Floyd's Cycle-Finding) concept.
+
+### Phase 1: Cycle Detection (The Meet-Up)
+
+1.  We use two pointers, **`slow`** (moves 1 step) and **`fast`** (moves 2 steps).
+2.  If a loop exists, the fast pointer will eventually catch and **meet** the slow pointer inside the loop. The moment `slow == fast`, we've confirmed the existence of a cycle.
+
+### Phase 2: Length Calculation (The Lap Counter)
+
+1.  Once the pointers meet, we know they are somewhere *within* the loop.
+2.  To find the loop length, we can fix one of the pointers (say, `slow`) and use a third pointer (or the other pointer) to **traverse the loop exactly once**, counting the number of steps until it returns to the fixed point (`slow`).
+3.  In your code, you fix `slow` and use the temporary pointer **`temp`** (initialized to `slow.next`) to perform this traversal and counting.
+
+***
+
+## 3. Code-Wise Explanation
+
+The code uses the standard two-pointer loop structure for detection and an inner loop for measurement.
+
+1.  **Initialization:**
+    * `Node slow = head;`, `Node fast = head;`: Pointers start at the head.
+    * `Node temp = null;`: A pointer reserved for loop length calculation.
+    * `int count = 1;`: The counter initialized to 1, as the loop is guaranteed to be at least one node long if found.
+
+2.  **Cycle Detection Loop:**
+    * `while(fast!=null && fast.next!=null)`: Standard loop condition to prevent `NullPointerException` if the list is non-cyclic.
+    * `slow=slow.next;` and `fast=fast.next.next;`: Pointers advance.
+    * `if(slow == fast)`: **Cycle Detected!** The pointers have met. Execution moves into the inner block to calculate the length.
+
+3.  **Loop Length Calculation:**
+    * `temp=slow.next;`: The `temp` pointer is initialized to the node immediately *after* the meeting point. We use `slow` as the fixed reference point.
+    * `while(temp!=slow)`: The inner loop runs until `temp` completes one full cycle and returns to the fixed point `slow`.
+    * `temp = temp.next;`: `temp` advances one step.
+    * `count++;`: The step is counted.
+    * `return count;`: Once `temp` meets `slow`, the total number of steps taken (`count`) is the length of the loop, and we return immediately.
+
+4.  **No Cycle Found:**
+    * `return 0;`: If the `while` loop completes (meaning `fast` hit `null`), no cycle exists, and the function returns 0.

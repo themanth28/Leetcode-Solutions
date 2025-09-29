@@ -1,0 +1,61 @@
+https://www.geeksforgeeks.org/problems/subtraction-in-linked-list/1?track=amazon-linkedlists&batchId=192
+
+This is a challenging linked list problem because it requires implementing subtraction (including borrowing) on numbers represented in the usual order (Most Significant Bit at the head), along with careful handling of the sign and leading zeros.
+
+---
+
+## 1. Understanding the Question
+
+The objective is to **subtract two numbers** represented by linked lists ($L_1$ and $L_2$) and return the result as a new linked list.
+
+* **Input:** Two linked lists, `head1` and `head2`, representing numbers where the **most significant digit is at the head** (e.g., $1 \to 2 \to 3$ is 123).
+* **Output:** A new linked list representing the absolute difference, with **no leading zeros** (unless the result is zero itself).
+* **Key Constraints:**
+    1.  The result must be the **absolute difference**; therefore, we must always subtract the smaller number from the larger number.
+    2.  The solution must correctly implement **borrowing** during subtraction.
+    3.  Leading zeros in the final result must be handled.
+
+***
+
+## 2. Intuition
+
+The solution employs a four-stage process to correctly perform the subtraction:
+
+1.  **Determine Minuend and Subtrahend:** Use a helper function (`compare`) to figure out which number is larger (the **minuend** or "big" number) and which is smaller (the **subtrahend** or "small" number). This ensures we always subtract Small from Big, avoiding negative results.
+2.  **Enable Subtraction:** Since the most significant digit is at the head, standard column-wise subtraction requires starting from the **least significant digit (tail)**. To enable this, **reverse both lists**.
+3.  **Subtract and Borrow:** Traverse the two reversed lists, performing subtraction column by column, maintaining a `borrow` flag (0 or 1) that is applied to the next digit's subtraction.
+4.  **Finalize and Restore:** The result list is built in reverse order (least significant digit at the head). We must **remove any trailing zeros** (which are leading zeros in the final, correct number) and then **reverse the result list** back to the MSB-first format.
+
+***
+
+## 3. Code-Wise Explanation
+
+The solution uses three helper methods (`reverse`, `getLength`, `compare`) and the main subtraction logic.
+
+### Helper Methods
+
+* `reverse(Node head)`: Standard three-pointer iterative reversal. It's used three times: once for each input list, and once for the final result.
+* `getLength(Node head)`: Traverses the list to get the total number of nodes.
+* `compare(Node head1, Node head2)`: Determines the smaller number (subtrahend).
+    * It first compares lengths: the shorter list is smaller.
+    * If lengths are equal, it performs a **lexicographical comparison** (digit by digit from the MSB) to find the smaller number.
+
+### `subLinkedList(Node head1, Node head2)`
+
+1.  **Identify Minuend and Subtrahend:**
+    * `Node small = compare(head1, head2);`: Finds the head of the numerically smaller list.
+    * `Node big = ...`: Assigns the head of the numerically larger list.
+    * `Node sR = reverse(small);` and `Node bR = reverse(big);`: Reverses both chosen lists to prepare for subtraction (LSB is now at the head).
+2.  **Subtraction Loop:**
+    * `while(bR != null)`: The loop runs as long as there are digits in the larger reversed list.
+    * `valB = valB - borrow;`: The current digit of the larger number (`valB`) is reduced by the **borrow** from the previous step.
+    * **Borrow Logic:**
+        * `if (valB >= valS)`: If subtraction is possible, `resultDigit = valB - valS`, and `borrow = 0`.
+        * `else`: If borrowing is necessary, `resultDigit = (valB + 10) - valS`, and `borrow = 1` for the next iteration.
+    * The result digit is appended to the new list (`ans.next = new Node(resultDigit)`).
+3.  **Leading Zero Removal (Trailing Zero Removal in LSB List):**
+    * The result list (`finalResultHead`) is currently in LSB-first order. The loop finds the **last non-zero node** (`lastNonZero`).
+    * `lastNonZero.next = null;`: Truncates the list after the last non-zero node, effectively **removing all trailing zeros**. In the final MSB-first result, these are the **leading zeros**.
+    * The edge case where the result is 0 (`lastNonZero == null`) is handled separately by returning `new Node(0)`.
+4.  **Final Restoration:**
+    * `return reverse(finalResultHead);`: The list is reversed one last time to put the most significant digit back at the head.

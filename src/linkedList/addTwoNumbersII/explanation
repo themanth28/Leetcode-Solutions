@@ -1,0 +1,60 @@
+https://leetcode.com/problems/add-two-numbers-ii/description/
+
+This is a classic linked list problem that involves adding two numbers represented by linked lists, where the **most significant digit is at the head** of the list. Your solution uses the strategy of **reversing the lists** to make standard column-wise addition possible.
+
+---
+
+## 1. Understanding the Question
+
+The goal is to **add two numbers** represented by two singly-linked lists, $L_1$ and $L_2$, and return the sum as a new linked list.
+
+* **Input:** Two linked lists, `l1` and `l2`, where the **nodes are arranged in order of significance** (e.g., $1 \to 2 \to 3$ represents the number 123).
+* **Output:** A new linked list representing the sum (e.g., $9 \to 5$ if $L_1=12$ and $L_2=83$).
+* **Key Challenge:** Unlike the variation where digits are stored in reverse order, here, we must start the addition from the least significant digit (the tail). Since singly-linked lists only allow forward traversal, we cannot easily access the tail without traversing the whole list first.
+* **Solution Strategy:** To enable standard column-wise addition (starting from the units place), the list must first be **reversed**.
+
+***
+
+## 2. Intuition
+
+The strategy employed is a **three-step process**:
+
+1.  **Reverse:** Since the least significant digit (units place) is at the tail, we **reverse both input lists** ($L_1$ and $L_2$). After reversal, the head of the list now represents the units place, making addition straightforward.
+2.  **Add:** Traverse the two reversed lists simultaneously, performing **column-wise addition** just like elementary math.
+    * Maintain a **`carry`** variable (initialized to 0).
+    * In each step, calculate the `sum` of the two digits and the `carry`.
+    * The new digit is `sum % 10`.
+    * The new `carry` is `sum / 10`.
+    * Build the result list node by node in the order of calculation (least significant to most significant).
+3.  **Final Reverse:** The result list is currently built in **reverse order** (units place is at the head). We perform a **final reversal** to restore the correct most-significant-digit-first format required for the final answer.
+
+***
+
+## 3. Code-Wise Explanation
+
+The solution relies on the helper function `reverse(ListNode head)` and the main `addTwoNumbers` logic.
+
+### `reverse(ListNode head)` Helper Function
+
+This is the standard iterative linked list reversal:
+
+* It uses three pointers: **`currNode`** (current), **`prev`** (stores the reversed part), and **`temp`** (saves the next node before breaking the link).
+* In the loop, it flips the pointer: `currNode.next = prev`.
+* It returns `prev`, which is the **new head** of the reversed list.
+
+### `addTwoNumbers(ListNode l1, ListNode l2)`
+
+1.  **Initial Reversal:**
+    * `ListNode first = reverse(l1);` and `ListNode second = reverse(l2);` perform the initial crucial step.
+2.  **Result List Setup:**
+    * `ListNode res = new ListNode(-1);` creates a **dummy node** to simplify handling the head of the result list.
+    * `ListNode ans = res;` is the working pointer used to build the result list.
+3.  **Addition Loop:**
+    * `while(first!=null || second != null || carry != 0)`: The loop continues as long as there are digits left in either list **OR** a carry is remaining, handling the final carry-over case (e.g., $99+1 = 100$).
+    * The internal `if/else if` chain calculates the total `sum` (digits + `carry`) while correctly advancing `first` and `second` pointers only if they are not `null`. This handles lists of unequal lengths.
+    * `int digit = sum%10;`: Extracts the unit digit for the new node.
+    * `carry = sum/10;`: Calculates the carry-over for the next iteration.
+    * `ListNode t = new ListNode(digit); ans.next = t; ans = ans.next;`: Creates the new node with the calculated digit and appends it to the result list, advancing the `ans` pointer.
+4.  **Final Reversal:**
+    * `ListNode sol = reverse(res.next);`: The result list (`res.next` skips the dummy node) is reversed *back* to place the most significant digit at the head.
+    * `return sol;`: Returns the final, correctly oriented result.

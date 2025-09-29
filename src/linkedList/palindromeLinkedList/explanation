@@ -1,0 +1,41 @@
+https://leetcode.com/problems/palindrome-linked-list/submissions/1785381737/
+
+## 1. Understanding the Question
+
+**Goal:** Check if a singly-linked list is the same forwards as backwards (**Palindrome**).
+
+**Constraints:** Must be done in **$O(n)$ time** (must visit all nodes) and **$O(1)$ space** (can't use a large helper structure like an array/stack).
+
+---
+
+## 2. Intuition (The Three-Step Dance) 💃
+
+Since we can't easily go backward in a singly-linked list, the strategy is to **modify the list** to allow simultaneous forward and backward comparison.
+
+1.  **Find the Split:** Use the **Fast/Slow Pointer** (Tortoise and Hare) technique. When the **Fast** pointer hits the end, the **Slow** pointer is at the **middle** (or the end of the first half).
+2.  **Flip the Back:** **Reverse** the list starting *after* the middle node. This makes the second half ready for a "backward" comparison.
+3.  **Compare:** Walk two pointers: one from the **original head** (forward) and one from the **reversed second half's head** (effectively backward). If any pair of values differs, it's not a palindrome.
+
+***Self-Correction/Cleanup:*** After comparing, **restore the list** by reversing the second half back and re-linking it to the middle. This keeps the data structure intact.
+
+---
+
+## 3. Code-Wise Explanation (Key Functions)
+
+### `findMiddle(head)`
+* Uses `slow` (moves 1 step) and `fast` (moves 2 steps).
+* Returns `slow`, which points to the **last node of the first half**.
+
+### `reverseList(head)`
+* Standard iterative reversal using three pointers:
+    1.  `current`: The node being processed.
+    2.  `prev`: The node that `current` will point *to* next.
+    3.  `nextNode`: **Crucial** to save the link before `current.next` is broken/rewritten.
+* Returns the new head of the reversed list.
+
+### `isPalindrome(head)`
+1.  **Find & Split:** Calls `findMiddle` to get the split point.
+2.  **Reverse:** Reverses the part starting from `middle.next`.
+3.  **Compare:** Uses `p1` (from original `head`) and `p2` (from new `secondHalfHead`). Iterates and checks `p1.val == p2.val`. Sets a flag (`isPalindromic`) and breaks immediately on mismatch.
+4.  **Restore:** Reverses the second half again and reconnects it to the middle node.
+5.  **Return:** Returns the `isPalindromic` flag.

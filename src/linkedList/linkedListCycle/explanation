@@ -1,0 +1,48 @@
+https://leetcode.com/problems/linked-list-cycle/description/
+
+This is the standard, highly efficient solution for detecting a cycle in a linked list using **Floyd's Cycle-Finding Algorithm**, also known as the **Fast and Slow Pointer** method.
+
+***
+
+## 1. Understanding the Question
+
+The objective is to determine if a **singly-linked list** contains a **cycle** (or loop).
+
+* **Input:** The `head` node of a singly-linked list.
+* **Cycle Definition:** A cycle exists if any node in the list points back to a previously visited node instead of pointing to `null` at the end. This makes the list traverse infinitely.
+* **Output:** A boolean value: `true` if a cycle exists, and `false` otherwise.
+* **Efficiency:** The solution must be **$O(n)$ time** (single pass, though the pointers may iterate through the cycle multiple times) and **$O(1)$ space** (constant extra memory for pointers).
+
+***
+
+## 2. Intuition
+
+The core intuition relies on the **"Racetrack Analogy"**:
+
+Imagine two runners, one **slow** (the tortoise) and one **fast** (the hare), running on a track.
+
+1.  **No Cycle (Straight Track):** If the track is straight (no cycle), the fast runner will always reach the finish line (the `null` end) before or at the same time as the slow runner, and they will **never meet**.
+2.  **Cycle (Circular Track):** If the track is circular (has a cycle), the fast runner will eventually overtake the slow runner from behind. Since the fast runner moves two steps for every one step the slow runner moves, the distance between them shrinks by one unit per step. If they are in a loop, they are guaranteed to **meet** at some point.
+
+In the linked list context:
+* We use two pointers, `slow` (moves 1 step) and `fast` (moves 2 steps).
+* If `slow` and `fast` ever point to the **exact same node** (`slow == fast`), it proves that the list is circular and contains a cycle.
+
+***
+
+## 3. Code-Wise Explanation
+
+The code implements Floyd's Cycle-Finding Algorithm using two pointers.
+
+1.  **Initial Checks and Initialization:**
+    * `if(head == null) { return false; }`: Handles the edge case of an empty list, which cannot have a cycle.
+    * `ListNode slow = head;` and `ListNode fast = head;`: Both pointers are initialized to the start of the list.
+
+2.  **The Traversal Loop:**
+    * `while (fast.next != null && fast.next.next != null)`: This is the main condition to prevent the `fast` pointer from causing a `NullPointerException` if it reaches the end of a non-cyclic list. The loop correctly stops if `fast` hits `null` or the node just before `null`.
+    * `slow = slow.next;`: The slow pointer advances by one node.
+    * `fast = fast.next.next;`: The fast pointer advances by two nodes.
+    * `if(slow == fast) { return true; }`: This is the cycle detection check. If, at any point, the two pointers meet, it means they are trapped in a cycle, and the method immediately returns `true`.
+
+3.  **Final Return:**
+    * `return false;`: If the loop finishes without the pointers meeting, it means the `fast` pointer reached the end (`null`) or the node just before it. Therefore, no cycle exists, and the method returns `false`.

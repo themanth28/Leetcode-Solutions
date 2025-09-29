@@ -1,0 +1,45 @@
+https://leetcode.com/problems/reverse-linked-list/description/
+
+## 1. Understanding the Question
+
+The goal is to **reverse a singly-linked list**.
+
+* **Input:** The `head` node of a singly-linked list.
+* **Output:** The `head` node of the newly reversed list.
+* **Mechanism:** Since it's a singly-linked list, we can only move forward. Reversing the list means changing the `next` pointer of every node to point to the **previous** node, instead of the next one.
+* **Constraints:** This must be done **in-place** (without creating new nodes) and efficiently in **$O(n)$ time** (one pass) and **$O(1)$ space** (using only a constant number of extra pointers).
+
+***
+
+## 2. Intuition
+
+To reverse the direction of a pointer (e.g., change $A \to B$ to $A \leftarrow B$), we must update $B$'s `next` field to point to $A$. However, if we do this, we lose the reference to the node that originally came *after* $B$ (say, $C$).
+
+The iterative approach uses **three main pointers** to keep track of the necessary nodes during each step, ensuring no part of the list is lost:
+
+1.  **`current`**: The node we are actively reversing the pointer of.
+2.  **`prev`**: The node that `current`'s `next` pointer will be set to (i.e., the node that has already been reversed).
+3.  **`temp`** (or `next`): A temporary pointer to save the original `next` link *before* it gets overwritten, allowing us to continue the traversal.
+
+The process is like unhooking a chain link by link and re-hooking it in the opposite direction.
+
+***
+
+## 3. Code-Wise Explanation
+
+The solution uses three pointers (`temp`, `current`, and `prev`) and iterates until the entire list has been processed.
+
+1.  **Initialization:**
+    * `ListNode temp = null;`: Used to temporarily store the reference to the next node in the original list.
+    * `ListNode current = head;`: Starts at the head. This pointer iterates through the list, processing one node per loop cycle.
+    * `ListNode prev = null;`: Starts as `null`. This pointer tracks the node whose link has just been reversed. For the original head, its new `next` will be `null`, so `prev` starts there.
+
+2.  **Looping and Reversal:**
+    * `while(current != null)`: The loop continues as long as there are nodes left to process.
+    * `temp = current.next;`: **Saves the link.** Before overwriting `current.next`, we must store the reference to the *next* node in the original sequence (`temp`). This is crucial for continuing the iteration.
+    * `current.next = prev;`: **Reverses the link.** The `current` node's pointer is flipped to point backward, to the `prev` node. This is the heart of the reversal.
+    * `prev = current;`: **Moves `prev` forward.** The `current` node (which is now reversed) becomes the new `prev` for the next iteration.
+    * `current = temp;`: **Moves `current` forward.** The `current` pointer advances to the *next* node in the original list, using the saved `temp` reference.
+
+3.  **Return Value:**
+    * `return prev;`: When the loop terminates (`current` is `null`), it means the last node has been processed. At this point, `prev` will be pointing to the node that was originally the tail, which is now the **new head** of the reversed list.

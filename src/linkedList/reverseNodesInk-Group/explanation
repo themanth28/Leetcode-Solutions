@@ -1,0 +1,76 @@
+https://leetcode.com/problems/reverse-nodes-in-k-group/
+
+## 1. Understanding the Question
+
+The goal is to **reverse the nodes of a singly-linked list in groups of a given size, $k$**, and return the head of the modified list.
+
+* **Input:** The `head` node of a singly-linked list and an integer $k$.
+* **Output:** The head of the list after the $k$-group reversal.
+* **Key Constraint:** Any remaining nodes at the end that do not form a complete group of size $k$ **must be left in their original order**.
+* **Example:** For a list $1 \to 2 \to 3 \to 4 \to 5$ and $k=3$:
+    * Group 1: $1 \to 2 \to 3$ is reversed to $3 \to 2 \to 1$.
+    * Group 2: $4 \to 5$ is left alone as it's not a full group of 3.
+    * Result: $3 \to 2 \to 1 \to 4 \to 5$.
+* **Efficiency:** The solution aims for **$O(n)$ time complexity** (one pass) and **$O(1)$ extra space** (in-place modification).
+
+---
+
+## 2. Intuition
+
+Reversing a sublist in-place while keeping the rest of the list intact is complex because you need to manage three separate connections: the link *before* the group, the links *within* the group, and the link *after* the group.
+
+### The Iterative Reversal Strategy (Insertion):
+
+Instead of a traditional three-pointer reversal on the whole sublist, this solution uses an **iterative insertion method** where nodes are strategically moved one by one to the front of the current group.
+
+1.  **Preparation (The Dummy Node):** Use a **`dummy`** node to simplify handling the head of the list, especially when the first group is reversed.
+2.  **Count:** First, traverse the list once to **count the total number of nodes**. This count tells us how many full groups of $k$ we have available to reverse.
+3.  **Reverse Group by Group:** Iterate through the list, consuming $k$ nodes at a time for reversal.
+4.  **The "Move to Front" Technique:** For a group $A \to B \to C \to D$ (with $k=3$), we reverse it by:
+    * Moving $B$ *before* $A$. List is now $B \to A \to C \to D$.
+    * Moving $C$ *before* $B$. List is now $C \to B \to A \to D$.
+    * This technique effectively reverses the group while constantly keeping track of the new head of the reversed group.
+
+### Key Pointers in the Group Reversal Loop:
+
+* **`pre`:** The node **just before** the current $k$-group (acts as the anchor for the new reversed group).
+* **`cur`:** The pointer to the **current tail** of the reversed group (i.e., the node that was originally the first in the group).
+* **`nex`:** The pointer to the **next node** to be moved and inserted at the front of the group.
+
+***
+
+## 3. Code-Wise Explanation
+
+The solution is divided into two parts: counting the total length and then reversing full groups.
+
+### Part 1: Setup and Counting
+
+1.  **Dummy Node Setup:**
+    * `ListNode dummy = new ListNode(0); dummy.next = head;`: Creates the dummy node to simplify the handling of the new head.
+    * `ListNode cur = dummy, nex = dummy, pre = dummy;`: Initializes the three working pointers to `dummy`.
+    * `int count = 0;`: Initialize the total node count.
+2.  **Counting the Total Length:**
+    * `while(cur.next != null){ count++; cur = cur.next; }`: A simple loop to traverse the entire list and calculate the total number of nodes (`count`). This determines how many full $k$-groups can be reversed.
+
+### Part 2: Reversing $k$-Groups
+
+The outer `while (count >= k)` loop ensures we only attempt reversal for complete groups.
+
+1.  **Setting Up for Reversal:**
+    * `cur = pre.next;`: `cur` is set to the **first node** of the current $k$-group (e.g., node 1 in $1 \to 2 \to 3$). This node will ultimately be the **tail** of the reversed group.
+    * `nex = cur.next;`: `nex` is set to the second node (e.g., node 2). This is the **first node we move**.
+    * *Note:* The `pre` pointer remains unchanged at the node **before** the group.
+
+2.  **The Inner Reversal Loop (`for(int i=1; i<k; i++)`):**
+    * This loop runs $k-1$ times because we only need $k-1$ insertion steps to reverse a group of $k$ nodes.
+    * `cur.next = nex.next;`: **Link 1 (Out):** The current group tail (`cur`) is re-linked to skip the node that is about to be moved (`nex`). This shrinks the list segment currently being traversed and keeps the original order of the remaining nodes.
+    * `nex.next = pre.next;`: **Link 2 (In):** The node being moved (`nex`) now points to the **current head** of the reversed group (which is always `pre.next`). This inserts `nex` at the front.
+    * `pre.next = nex;`: **Link 3 (Anchor):** The anchor node (`pre`) now points to the newly inserted node (`nex`), making `nex` the new head of the reversed group.
+    * `nex = cur.next;`: **Advance:** `nex` is set to the next node to be moved, which is the node that `cur` now points to.
+
+3.  **Moving to the Next Group:**
+    * `pre = cur;`: After the inner loop completes, the node that was originally the start of the group (`cur`) is now the **tail** of the reversed group. We update `pre` to this node to prepare it as the new anchor for the next group's reversal.
+    * `count -= k;`: Decrement the counter to track the remaining nodes.
+
+4.  **Return:**
+    * `return dummy.next;`: Returns the node immediately after the dummy node, which is the head of the fully or partially reversed list.

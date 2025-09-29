@@ -1,0 +1,76 @@
+https://www.geeksforgeeks.org/problems/swap-kth-node-from-beginning-and-kth-node-from-end-in-a-singly-linked-list/1?track=amazon-linkedlists&batchId=192
+
+This problem requires swapping the **$k$-th node from the beginning** with the **$k$-th node from the end** of a singly-linked list. Your solution correctly uses two separate traversals (one standard, one two-pointer) to locate the nodes and then performs complex pointer manipulation to swap them in place.
+
+***
+
+## 1. Understanding the Question
+
+The objective is to swap the positions of two specific nodes in a singly-linked list:
+1.  The **$k$-th node from the start** ($N_k$).
+2.  The **$k$-th node from the end** ($N_{L-k+1}$).
+
+* **Input:** The `head` node of the list and an integer $k$.
+* **Output:** The `head` of the list after the two nodes are swapped.
+* **Key Challenge:** Swapping nodes requires correctly updating the `next` pointers of the nodes **preceding** the two nodes to be swapped, as well as updating the `next` pointers *of* the swapped nodes themselves. Special care must be taken for edge cases like $k=1$ (swapping the head/tail) or when the two target nodes are adjacent.
+* **Efficiency:** The approach aims for **$O(L)$ time** (where $L$ is the length of the list) and **$O(1)$ space** (in-place swap).
+
+***
+
+## 2. Intuition
+
+The solution employs two passes to locate the nodes, followed by a multi-step pointer swap.
+
+### Node Location:
+
+1.  **$k$-th Node from Start ($N_k$):** This is straightforward. We use a pointer (`current`) and its predecessor (`prev1`) and traverse $k-1$ steps.
+2.  **$k$-th Node from End ($N_{L-k+1}$):** This is found using the **Two-Pointer Gap** method (similar to finding the $N$-th node from the end). We use a **`fast`** pointer moved $k$ steps ahead of a **`slow`** pointer. When the `fast` pointer reaches the end (`null`), the `slow` pointer will be exactly at the target node $N_{L-k+1}$, and its predecessor (`prev2`) will be ready for the swap.
+
+### The Swap Logic:
+
+Once the nodes ($node1$, $node2$) and their predecessors ($prev1$, $prev2$) are identified, the swap is a four-step process:
+
+1.  **Handle Head Change:** If $k=1$ or $k=L$ (i.e., $prev1$ or $prev2$ is $null$), the **list head must be updated** to the new node.
+2.  **Attach Predecessors:** The `next` pointer of the predecessor of $node1$ ($prev1$) is set to $node2$, and vice versa ($prev2.next = node1$).
+3.  **Handle Adjacency/Overlap:** Check if $node1$ and $node2$ are adjacent (e.g., $node1.next = node2$). If so, the link between them needs special handling to ensure they swap cleanly without breaking the chain.
+4.  **Swap Successors:** Swap the `next` pointers *of* the two nodes ($node1.next$ and $node2.next$).
+
+***
+
+## 3. Code-Wise Explanation
+
+The code implements the location strategy and the robust, multi-case pointer swapping logic.
+
+### 1. Locating $N_k$ (K-th from Start)
+
+* The first loop runs $k-1$ times.
+* `prev1` stores the predecessor of the $k$-th node.
+* `current` (which becomes `node1`) lands on the $k$-th node.
+
+### 2. Locating $N_{L-k+1}$ (K-th from End)
+
+* The **`fast`** pointer moves $k$ steps ahead of **`slow`** and **`prev2`** (which are at `head`).
+* The subsequent `while(fast != null)` loop advances all three pointers simultaneously.
+* `slow` (which becomes `node2`) lands on the $k$-th node from the end.
+* `prev2` stores its predecessor.
+
+### 3. Swap Logic (Pointer Manipulation)
+
+* `if (node1 == node2) { return head; }`: **Overlap Case:** If $k$-th from start is the same as $k$-th from end (e.g., the middle node in an odd-length list), no swap is needed.
+* **Updating the Head:**
+    * The two `if` blocks handle the case where $N_k$ or $N_{L-k+1}$ is the original head ($k=1$ or $k=L$). The `head` pointer is updated to the node taking the new position at the start.
+* **Attaching Predecessors:**
+    * `if (prev1 != null) { prev1.next = node2; }`: Links the node before $N_k$ to $N_{L-k+1}$.
+    * `if (prev2 != null) { prev2.next = node1; }`: Links the node before $N_{L-k+1}$ to $N_k$.
+* **Swapping Successors (Handling Adjacency):**
+    * `Node tempNext = node1.next;`: Stores the successor of $N_k$ temporarily.
+    * **Adjacency Case 1 ($N_k \to N_{L-k+1}$):** `if (node1.next == node2)`
+        * We swap $N_k$ and $N_{L-k+1}$ while keeping the link between them: $N_{L-k+1}$'s `next` is set to $N_k$.
+        * $N_k$'s `next` is set to $N_{L-k+1}$'s original successor (`node2.next`).
+    * **Adjacency Case 2 ($N_{L-k+1} \to N_k$):** `else if (node2.next == node1)`
+        * This block handles the reverse adjacency case (which can occur when $k > L/2$). The logic is symmetric to Case 1.
+    * **Normal Case (Not Adjacent):** `else`
+        * `node1.next = node2.next;`: $N_k$'s successor becomes $N_{L-k+1}$'s original successor.
+        * `node2.next = tempNext;`: $N_{L-k+1}$'s successor becomes $N_k$'s original successor (stored in `tempNext`).
+
+* `return head;`: Returns the head of the modified list.

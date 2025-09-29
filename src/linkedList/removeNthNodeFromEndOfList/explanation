@@ -1,0 +1,52 @@
+https://leetcode.com/problems/remove-nth-node-from-end-of-list/description/
+
+## 1. Understanding the Question
+
+The objective is to **remove the $n$-th node from the end** of a singly-linked list and return the head of the modified list.
+
+* **Input:** The `head` node of the list and an integer $n$ (where $n$ is guaranteed to be a valid position).
+* **Output:** The `head` of the list after removal.
+* **Key Challenge:** In a singly-linked list, we can only move forward. To remove the $n$-th node from the end, we need a way to find the node located at $(L - n + 1)$ from the start, where $L$ is the list length.
+* **Edge Case:** The most difficult case is when the node to be removed is the original **head** of the list (i.e., when $n$ equals the list length $L$).
+* **Efficiency:** The solution must be **$O(L)$ time** (one pass) and **$O(1)$ space** (constant extra memory).
+
+***
+
+## 2. Intuition
+
+The most straightforward way to solve this in a single pass is to use **two pointers, slow and fast, separated by a gap of $n$ nodes**.
+
+1.  **Establish the Gap:** Move the **`fast`** pointer $n$ steps ahead of the **`slow`** pointer. This establishes the required gap.
+2.  **Simultaneous Traversal:** Move both `slow` and `fast` pointers forward one step at a time, maintaining the $n$-node gap.
+3.  **Stopping Condition:** When the **`fast`** pointer reaches the **end of the list** (i.e., `fast.next` becomes `null`), the **`slow`** pointer will automatically be positioned at the node **just before** the node that needs to be removed. Why? Because the $n$-node gap ensures that when `fast` has $k$ steps remaining to the end, `slow` also has $k$ steps remaining to the node we want to remove.
+4.  **Removal:** Once `slow` is in position, we skip the target node by setting `slow.next = slow.next.next`.
+
+### The Dummy Node ($\star$ Crucial for Edge Cases $\star$):
+
+To handle the edge case where the head must be removed ($n = L$), we introduce a **`dummy`** node before the original `head`.
+
+* Both `slow` and `fast` pointers start at the **`dummy`** node.
+* By the time `fast` reaches the end, `slow` will be pointing to the node *before* the target. If the target is the original head, `slow` will be pointing to the **`dummy`** node, which allows us to correctly remove the head node without special case logic.
+
+***
+
+## 3. Code-Wise Explanation
+
+The code implements the two-pointer technique initialized with a dummy node.
+
+1.  **Edge Case and Dummy Node Setup:**
+    * `if(head == null) { return null; }`: Handles an empty list.
+    * `ListNode dummy = new ListNode(0);`: Creates the sentinel node.
+    * `dummy.next = head;`: Links the dummy node to the original list.
+    * `ListNode slow = dummy;` and `ListNode fast = dummy;`: Both pointers start at the dummy node.
+
+2.  **Establishing the Gap:**
+    * `for(int i=0; i<n; i++){ fast = fast.next; }`: The `fast` pointer is advanced **$n$ steps**. At the end of this loop, there is an $n$-node gap between `slow` and `fast`. For example, if $n=2$, `slow` is at `dummy` and `fast` is at node 2.
+
+3.  **Simultaneous Traversal:**
+    * `while(fast.next != null)`: The loop runs until `fast` reaches the last node (i.e., `fast.next` is the tail's `null`).
+    * `slow = slow.next;` and `fast = fast.next;`: Both pointers move forward one step. They maintain the $n$-node gap. When `fast` hits the last node, `slow` is guaranteed to be one node before the $n$-th node from the end.
+
+4.  **Node Removal and Return:**
+    * `slow.next = slow.next.next;`: This performs the removal. `slow` skips over its immediate next node, effectively unlinking the $n$-th node from the end. Since `slow` started at the `dummy` node, this handles all cases, including removing the original head.
+    * `return dummy.next;`: Since the actual head might have been removed, we return the node immediately following the `dummy` node. This is the correct (possibly new) head of the modified list.

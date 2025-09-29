@@ -1,0 +1,70 @@
+https://leetcode.com/problems/copy-list-with-random-pointer/
+
+This solution provides an optimal, **$O(1)$ space** and **$O(N)$ time** method for cloning a linked list that contains both `next` and `random` pointers. This technique is often referred to as the **Weaving Method** or **Interleaving Method**.
+
+***
+
+## 1. Understanding the Question
+
+The objective is to create a **deep copy** (clone) of a special linked list where each node contains two pointers: `next` (the sequential link) and `random` (a link that can point to any node in the list or to `null`).
+
+* **Input:** The `head` node of the original list.
+* **Output:** The `head` node of the fully independent cloned list.
+* **Requirement:** The copied list must be a deep copy, meaning:
+    1.  A new node must be created for every node in the original list.
+    2.  The `val` of each new node must match the original.
+    3.  Both the `next` and `random` pointers of the new nodes must correctly reference their corresponding **new** nodes in the cloned list.
+* **Constraint (Implied by the solution):** Achieve this in **$O(N)$ time** and **$O(1)$ extra space** (excluding the space required for the new list itself).
+
+***
+
+## 2. Intuition (The Weaving Method)
+
+Since we are restricted from using a hash map (which would allow $O(N)$ time but $O(N)$ space), we must use the list structure itself to store the mapping between original and copied nodes.
+
+The core idea is to break the problem into three simple, sequential passes using the list structure as temporary storage:
+
+1.  **Insertion/Weaving:** For every original node ($A$), create its copy ($A'$) and **insert it immediately after $A$**. This creates an interleaved list: $A \to A' \to B \to B' \to C \to C' \to \dots$ This temporary structure provides a direct reference: $A'$ is always `A.next`.
+2.  **Random Pointer Linking:** Use the interleaved structure to set the `random` pointers for the copied nodes. If $A$'s random pointer points to $X$, then $A'$'s random pointer must point to $X'$. Since $X'$ is always located at `X.next` in the interleaved list, we can set `A'.random = A.random.next`.
+3.  **Extraction/Unweaving:** Separate the interwoven list back into two distinct lists: the original list ($A \to B \to C \to \dots$) and the new cloned list ($A' \to B' \to C' \to \dots$). The cloned list is then returned.
+
+***
+
+## 3. Code-Wise Explanation
+
+The solution uses three separate methods to implement the three-step weaving process.
+
+### 1. `insertNode(Node head)` (Weaving)
+
+This pass creates and inserts the copy nodes.
+
+* The loop iterates over the original nodes using `temp`.
+* A new node (`copyNode`) is created with the same value (`temp.val`).
+* `copyNode.next = temp.next;`: The copy is linked to the original node that followed the current one.
+* `temp.next = copyNode;`: The original node is linked to its copy, creating the interleave.
+* `temp = temp.next.next;`: The traversal skips the newly inserted copy node to move to the next original node.
+
+### 2. `randomNode(Node head)` (Random Linking)
+
+This pass sets the `random` pointers for the copy nodes.
+
+* The loop traverses the interleaved list using `temp` (pointing to original nodes).
+* `Node copyNode = temp.next;`: Easily finds the copy node.
+* `if(temp.random != null) { copyNode.random = temp.random.next; }`:
+    * If the original node `temp` has a random link to an original node $X$ (`temp.random`), then $X$'s copy ($X'$) is located at `temp.random.next`.
+    * This sets the copy node's random pointer to the correct new node.
+* `temp = temp.next.next;`: Moves to the next original node in the interleaved list.
+
+### 3. `clubNode(Node head)` (Unweaving/Extraction)
+
+This pass separates the two lists and restores the original list structure.
+
+* `Node dummy = new Node(-1);` and `Node res = dummy;`: A **dummy node** is used to easily build the new cloned list without special case handling for the head. `res` is the tail of the new list being built.
+* The loop traverses the interleaved list using `temp` (pointing to original nodes).
+* **Cloning List Extraction:**
+    * `res.next = temp.next;`: The new list's tail (`res`) is linked to the current copy node (`temp.next`).
+    * `res = res.next;`: `res` advances to the current copy node, extending the cloned list.
+* **Original List Restoration:**
+    * `temp.next = temp.next.next;`: The original list node (`temp`) is re-linked to skip the copy node, restoring the original structure.
+    * `temp = temp.next;`: `temp` advances to the next original node.
+* `return dummy.next;`: The first node of the completely separated cloned list is returned.
