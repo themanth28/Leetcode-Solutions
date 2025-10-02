@@ -1,6 +1,6 @@
 package linkedList.addTwoNumbersII;
 
-public class ListNode {
+class ListNode {
       int val;
       ListNode next;
       ListNode() {}
