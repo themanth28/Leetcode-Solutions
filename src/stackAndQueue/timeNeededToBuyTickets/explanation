@@ -1,0 +1,52 @@
+https://leetcode.com/problems/time-needed-to-buy-tickets/description/
+
+---
+
+### 1. Understanding the Question
+
+We have an array `tickets` where each number is the amount of tickets a person needs to buy. Everyone buys **one ticket at a time** in a **queue** (line) and then goes to the back of the line if they need more. We are given an index, $\mathbf{k}$, which is the specific person we care about.
+
+The goal is to calculate the **total time** (total tickets bought by everyone) until the person at index $\mathbf{k}$ has bought **all** the tickets they need.
+
+---
+
+### 2. Intuition
+
+Since the process involves people waiting in a line, buying one ticket, and returning to the back, the simulation must use a **Queue** (First-In, First-Out).
+
+1.  We'll use the Queue to store the **indices** of the people currently in line.
+2.  We repeatedly take the person from the front of the line, count one second (for the ticket purchase), decrease their ticket count, and then put them back at the end of the line *only if* they still need more tickets.
+3.  We stop and return the total time as soon as person $\mathbf{k}$ finishes buying their last ticket.
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `Queue<Integer> q1 = new LinkedList<Integer>();`
+    * Creates a **Queue** to hold the **indices** of the people waiting in line.
+
+2.  `for(int i=0; i<tickets.length; i++){ q1.add(i); }`
+    * Initializes the queue by adding the index of every person (0, 1, 2, ...).
+
+3.  `int time = 0;`
+    * A counter to track the **total seconds** elapsed (total tickets bought).
+
+4.  `while(!q1.isEmpty()){ ... }`
+    * The simulation runs as long as there are people left in the line.
+
+5.  `int c = q1.poll();`
+    * Gets the index ($\mathbf{c}$) of the person at the **front** of the line and removes them.
+
+6.  `time++;`
+    * Increments the time counter, because this person just bought **one ticket**.
+
+7.  `tickets[c]--;`
+    * Decreases the remaining ticket count for person $\mathbf{c}$ by one.
+
+8.  `if(c == k && tickets[k]==0){ return time; }`
+    * **Stop condition:** If the current person is our target ($\mathbf{c} == \mathbf{k}$) AND they just finished buying their last ticket (`tickets[k]==0`), we return the final `time`.
+
+9.  `if(tickets[c]>0) q1.offer(c);`
+    * If person $\mathbf{c}$ **still needs more tickets** (count is $> 0$), their index is added back to the **end** of the queue (`q1.offer(c)`).
+
+10. The final `return 0;` is technically unreachable because the logic guarantees a return when person $\mathbf{k}$ is finished.

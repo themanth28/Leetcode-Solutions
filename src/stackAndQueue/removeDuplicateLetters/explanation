@@ -1,0 +1,55 @@
+https://leetcode.com/problems/remove-duplicate-letters/
+
+***
+
+### 1. Understanding the Question
+
+The goal is to take a string $\mathbf{s}$ and create the **shortest possible string** that:
+1.  **Contains all the unique characters** that were in $\mathbf{s}$.
+2.  **Does not contain duplicate characters** (each character appears only once).
+3.  Is the **lexicographically smallest** among all possible results (i.e., comes first alphabetically).
+
+Example: `s = "cbacdcbc"` $\rightarrow$ unique characters are `a, b, c, d`.
+Result must be a permutation of `abcd`. Smallest one is `acdb` (since it's the smallest one that maintains the relative order from the original string).
+
+***
+
+### 2. Intuition
+
+We must process the string from left to right and make a **greedy** choice at each step. We use a **Stack** to build the result.
+
+1.  To ensure the result is lexicographically smallest, we want to place **smaller characters as early as possible**.
+2.  When we encounter a new character, $\mathbf{C}$:
+    * We look at the character on the stack top, $\mathbf{T}$.
+    * If $\mathbf{C}$ is **smaller** than $\mathbf{T}$ **AND** we know there is another occurrence of $\mathbf{T}$ later in the string (i.e., we can still include $\mathbf{T}$ later), then we should **remove (pop) $\mathbf{T}$** now. Removing $\mathbf{T}$ lets us insert the smaller character $\mathbf{C}$ earlier, making the final result smaller.
+3.  We use a **`lastOccurence` map** to check condition (AND). We use a **`visited` set** to ensure we never add a character that is already in the stack.
+
+***
+
+### 3. Code-wise Explanation
+
+1.  `Map<Character, Integer> lastOccurence = new HashMap<>();`
+    * **Pre-processing:** This map is filled first. It stores the **last index** where each character appears in $\mathbf{s}$. This is used to check if a character on the stack can safely be popped because it will appear again later.
+
+2.  `Stack<Character> st = new Stack<>();` and `Set<Character> visited = new HashSet<>();`
+    * `st`: The **Monotonic Stack** that builds the result string.
+    * `visited`: Tracks which characters are currently **in the stack** (to prevent duplicates).
+
+3.  `for(int i=0; i<s.length(); i++){ ... }`
+    * Loop to process the string character by character from left to right.
+
+4.  `if(visited.contains(s.charAt(i))){ continue; }`
+    * If the current character is already in the stack (`visited`), we **skip it** and move on, as we only need one of each character.
+
+5.  `while(!st.isEmpty() && s.charAt(i) < st.peek() && i < lastOccurence.getOrDefault(st.peek(), -1)){ ... }`
+    * **The Greedy Monotonic Stack Core:** This loop removes elements from the stack if the current character `s.charAt(i)` is a better choice.
+        * `s.charAt(i) < st.peek()`: The current character is **smaller** than the character on the stack top.
+        * `i < lastOccurence.getOrDefault(st.peek(), -1)`: The character on the stack top will **appear again later** (its last index is ahead of the current index $i$).
+    * If both are true: **Pop** the stack top and **remove it** from `visited`.
+
+6.  `st.push(s.charAt(i)); visited.add(s.charAt(i));`
+    * After potentially popping larger characters, the current character is **pushed** onto the stack and **added** to `visited`.
+
+7.  **Final Construction:**
+    * The loop finishes, and the stack contains the characters in the correct order for the final result.
+    * The code iterates through the stack to build and return the `StringBuilder` result.

@@ -1,0 +1,49 @@
+https://leetcode.com/problems/min-stack/description/
+
+---
+
+### 1. Understanding the Question
+
+The goal is to implement a Stack that supports four operations, all in **constant time ($O(1)$)**:
+1.  **`push(val)`:** Push an element onto the stack.
+2.  **`pop()`:** Remove the top element.
+3.  **`top()`:** Get the top element.
+4.  **`getMin()`:** Retrieve the current **minimum element** in the stack.
+
+---
+
+### 2. Intuition
+
+To achieve $O(1)$ `getMin`, we must avoid iterating or using an auxiliary stack (which still uses extra $O(N)$ space). This optimized approach uses the main stack to store a **modified value** only when a new minimum is pushed.
+
+* We maintain a single variable, $\mathbf{min}$, which tracks the current minimum value in the entire stack.
+* **The Trick:** When a new value $\mathbf{val}$ is pushed that is **smaller** than the current $\mathbf{min}$, we don't push $\mathbf{val}$. Instead, we push an encoded value $\mathbf{2 \times val - min}$. This encoded value is always **smaller** than the new $\mathbf{min}$ ($\mathbf{val}$), flagging it as a minimum update. We then update $\mathbf{min} = \mathbf{val}$.
+* **The Reversal:** When we `pop` the encoded value $\mathbf{top}$ (where $\mathbf{top < min}$), the old minimum can be recovered using the formula: $\mathbf{Old\_Min} = \mathbf{2 \times Current\_Min - top}$.
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `Stack<Long> s; long min;`
+    * Uses a stack of `Long` to store the values (or encoded differences) and a `long` variable $\mathbf{min}$ to track the current minimum. Using `Long` helps prevent overflow during the $2 \times \text{val} - \text{min}$ calculation, as the difference can be large.
+
+2.  **`push(int val)`:**
+    * **First element:** If empty, push the value, and set `min` to `val`.
+    * **New minimum:** `if(val < min)`:
+        * We push the encoded value: $\mathbf{2L \times val - min}$.
+        * We update $\mathbf{min} = \mathbf{val}$ (the actual new minimum).
+    * **Regular value:** If `val >= min`, just push the value onto the stack.
+
+3.  **`pop()`:**
+    * Gets $\mathbf{top}$ from the stack.
+    * **Encoded value:** `if(top < min)`: This means $\mathbf{top}$ is an encoded old minimum.
+        * We recover the **old minimum** using $\mathbf{2 \times min - top}$ and update $\mathbf{min}$ to this recovered value.
+    * **Regular value:** If `top >= min`, the `min` variable remains unchanged.
+
+4.  **`top()`:**
+    * Gets $\mathbf{top}$ from the stack.
+    * **Encoded value:** `if(top < min)`: The element at the top *must* be the current minimum $\mathbf{min}$ (it was pushed just before $\mathbf{min}$ was updated). We return `min`.
+    * **Regular value:** If `top >= min`, the top element is a regular value, and we return `top`.
+
+5.  **`getMin()`:**
+    * Simply returns the value stored in the $\mathbf{min}$ variable, which is always the current minimum element in the stack.

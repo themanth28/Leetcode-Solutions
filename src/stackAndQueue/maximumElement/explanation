@@ -1,0 +1,52 @@
+https://www.hackerrank.com/challenges/maximum-element/problem
+
+***
+
+### 1. Understanding the Question
+
+The goal is to implement a stack that supports the standard `push` and `pop` operations, but also a third operation, **`getMax`** (Type 3 query), that returns the current maximum element in the stack, all in **constant time ($O(1)$)**. The input is a list of operation strings:
+* **Type 1 (`1 x`):** Push the integer $x$ onto the stack.
+* **Type 2 (`2`):** Pop the element from the top of the stack.
+* **Type 3 (`3`):** Get the current maximum element in the stack.
+
+***
+
+### 2. Intuition
+
+A standard stack's `pop` operation makes tracking the maximum difficult: if the maximum element is popped, finding the new maximum would require scanning the whole stack ($O(N)$ time).
+
+To achieve $O(1)$ `getMax`, we use an **Auxiliary Stack (`maxStack`)** alongside the **Main Stack (`mainStack`)**. The `maxStack` is used to **store the maximum element seen so far** for every corresponding element pushed onto the `mainStack`.
+
+1.  **On Push:** When an element is pushed onto `mainStack`, we push the *current overall maximum* onto `maxStack`.
+2.  **On Pop:** When an element is popped from `mainStack`, we also pop its corresponding maximum from `maxStack`.
+3.  **On GetMax:** The current maximum element is always available instantly at the **top of `maxStack`**.
+
+***
+
+### 3. Code-wise Explanation
+
+1.  `Stack<Integer> mainStack = new Stack<>();`
+    * This is the **standard stack** holding all the data elements.
+
+2.  `Stack<Integer> maxStack = new Stack<>();`
+    * This is the **auxiliary stack** where the current maximum is tracked. It maintains a **1:1 size** with `mainStack`.
+
+3.  **Loop Setup:** The code iterates through each operation string and parses it into `type` (1, 2, or 3).
+
+4.  **`case 1: // Push x`**
+    * `mainStack.push(x);`
+    * Pushes the new value $\mathbf{x}$ onto the data stack.
+    * **`if (maxStack.isEmpty() || x >= maxStack.peek()) { maxStack.push(x); }`**
+        * If $\mathbf{x}$ is greater than or equal to the current maximum (or the stack is empty), $\mathbf{x}$ is the **new maximum**. It is pushed onto `maxStack`.
+    * **`else { maxStack.push(maxStack.peek()); }`**
+        * If $\mathbf{x}$ is **not** the new maximum, the **old maximum** (`maxStack.peek()`) is pushed again. This ensures that when $\mathbf{x}$ is later popped, the correct previous maximum will remain on top.
+
+5.  **`case 2: // Pop`**
+    * `mainStack.pop();`
+    * Removes the top element from the data stack.
+    * **`maxStack.pop();`**
+    * **Crucial:** Removes the corresponding maximum element from `maxStack`. The maximum for the *new* top element of `mainStack` is now correctly at the top of `maxStack`.
+
+6.  **`case 3: // GetMax`**
+    * **`results.add(maxStack.peek());`**
+    * The maximum element for the current state of the stack is always instantly available at the **top of `maxStack`** (`peek()`). This ensures $O(1)$ performance.

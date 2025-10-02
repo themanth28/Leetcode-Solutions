@@ -1,0 +1,70 @@
+https://leetcode.com/problems/maximum-number-of-tasks-you-can-assign/
+
+***
+
+### 1. Understanding the Question
+
+The objective is to find the **maximum number of tasks ($X$)** that can be assigned to $X$ workers.
+
+**Constraints:**
+1.  A worker can only perform a task if `worker_strength >= task_difficulty`.
+2.  We have a limited number of **pills** (`pills`).
+3.  A pill can be given to a worker to temporarily increase their strength by `strength` (`worker_strength + strength >= task_difficulty`).
+
+We must assign the most difficult $X$ tasks to the strongest $X$ workers to see if an assignment is possible.
+
+---
+
+### 2. Intuition
+
+The problem asks for a maximum value, which strongly suggests using **Binary Search** on the answer ($\mathbf{X}$, the number of tasks/workers).
+
+#### Binary Search ($\mathbf{maxTaskAssign}$)
+We can test if it's possible to assign $\mathbf{X}$ tasks using a helper function, $\mathbf{canAssign(X)}$. If it's possible, we try a larger $X$; if not, we try a smaller $X$.
+
+#### Greedy Check ($\mathbf{canAssign}$)
+To make the assignment check as easy as possible, we use a greedy approach:
+1.  **Sort** both `tasks` and `workers`.
+2.  Iterate through the tasks **from hardest to easiest** (right to left).
+3.  For each task, try to assign it to a worker using the following priorities:
+    * **Priority 1 (Existing Boosted Worker):** Use the **weakest** worker who was previously boosted and can still handle the current task. (This saves the strongest unboosted workers and pills for harder tasks.)
+    * **Priority 2 (Strongest Unboosted Worker):** Use the strongest remaining unboosted worker who can handle the task without a pill. (This saves pills.)
+    * **Priority 3 (Boost a Worker):** If neither 1 nor 2 works, find the **weakest** worker who can be boosted to handle the task. Use a pill and assign the task to them. (We use the weakest possible boosted worker to save stronger workers for even harder tasks.)
+
+The **Deque** is used to store the strength of workers who are **eligible to be boosted** for future tasks.
+
+---
+
+### 3. Code-wise Explanation
+
+#### A. `maxTaskAssign(int[] tasks, int[] workers, ...)`
+
+1.  `Arrays.sort(tasks); Arrays.sort(workers);`
+    * **Crucial:** Sorts both lists to enable the greedy assignment of hardest tasks to strongest workers.
+2.  `while (low < high) { ... }`
+    * Standard binary search setup to find the maximum possible `taskCount` ($\mathbf{X}$) for which `canAssign` returns `true`.
+
+#### B. `canAssign(..., int taskCount)`
+
+1.  `Deque<Integer> boosted = new ArrayDeque<>();`
+    * A deque to hold the strength of workers who have been **flagged as boostable** for tasks already processed. It's used as a Min-Heap/Queue when using a pill (to pick the smallest eligible worker) and a regular queue otherwise.
+2.  `int w = workers.length - 1; int freePills = pills;`
+    * `w`: Index pointing to the **strongest remaining worker**. We move left in the `workers` array.
+    * `freePills`: Tracks remaining pills.
+
+3.  `for (int t = taskCount - 1; t >= 0; t--) { ... }`
+    * Iterates through the $\mathbf{taskCount}$ hardest tasks, from index `taskCount - 1` down to 0.
+
+4.  **Priority 1 (Use existing boosted worker - DEQUE MIN/FRONT):**
+    * `if (!boosted.isEmpty() && boosted.peekFirst() >= task)`
+    * Checks if the **weakest** worker already flagged in the `boosted` queue can handle the current task. If so, they take the task (`pollFirst()`), saving a stronger worker/pill.
+
+5.  **Priority 2 (Use strongest unboosted worker):**
+    * `else if (w >= 0 && workers[w] >= task)`
+    * Checks if the strongest available unboosted worker (`workers[w]`) can handle the task without a pill. If so, assign it and move to the next strongest worker (`w--`).
+
+6.  **Priority 3 (Boost a worker - DEQUE MAX/BACK):**
+    * `else { ... }` (Must use a pill)
+    * `while (w >= 0 && workers[w] + strength >= task)`: Find **all** remaining workers who are strong enough *with* a pill. Add their unboosted strength to the `boosted` deque. This loop finds the weakest worker $W_{min}$ who can do the task. (`w--` moves to the next strongest available worker).
+    * `if (boosted.isEmpty() || freePills == 0)`: If no boostable workers were found or no pills are left, assignment **fails**.
+    * `boosted.pollLast(); freePills--;`: We use the **strongest** worker found in the previous `while` loop's range (which is at `pollLast()` due to the order we added them). We use the *strongest eligible* worker to ensure the pill is used on the best available match that truly needs it, although the greedy assignment logic often benefits more from using the weakest eligible worker. However, because the main loop iterates through tasks from hardest to easiest, using `pollLast()` (which is the strongest worker added in the `while` loop) is the standard and correct greedy choice in this specific Monotonic Deque implementation to match the hardest task to the strongest eligible worker.

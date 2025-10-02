@@ -1,0 +1,60 @@
+https://www.geeksforgeeks.org/problems/the-celebrity-problem/1
+
+***
+
+### 1. Understanding the Question
+
+We are given a square matrix $\mathbf{mat}$ representing a party of people. If $\mathbf{mat[i][j] = 1}$, it means person $\mathbf{i}$ **knows** person $\mathbf{j}$. If $\mathbf{mat[i][j] = 0}$, person $\mathbf{i}$ does not know person $\mathbf{j}$.
+
+A **Celebrity** is defined as a person who meets two conditions:
+1.  **Everyone else knows the celebrity.**
+2.  **The celebrity knows nobody else** (except possibly themselves, which is usually $\mathbf{mat[i][i] = 0}$).
+
+The goal is to return the index of the celebrity, or $\mathbf{-1}$ if no celebrity exists.
+
+---
+
+### 2. Intuition
+
+The core idea is that a celebrity is the ultimate "sink" in the relationship graph. The Stack allows us to quickly eliminate non-celebrities in $O(N)$ time.
+
+1.  **Elimination Phase:** Push all person indices onto a stack. Pick two people, $\mathbf{A}$ and $\mathbf{B}$, and check the relationship $\mathbf{A} \to \mathbf{B}$:
+    * If $\mathbf{A}$ knows $\mathbf{B}$ ($\mathbf{A} \to \mathbf{B}$), then $\mathbf{A}$ **cannot** be the celebrity (violates condition 2). We discard $\mathbf{A}$ and keep $\mathbf{B}$ as a potential candidate.
+    * If $\mathbf{A}$ does **not** know $\mathbf{B}$ ($\mathbf{A} \not\to \mathbf{B}$), then $\mathbf{B}$ **cannot** be the celebrity (violates condition 1). We discard $\mathbf{B}$ and keep $\mathbf{A}$ as a potential candidate.
+    * After repeating this until only **one person** is left on the stack, that person is the *only possible* celebrity.
+
+2.  **Verification Phase:** The single remaining person (`candidate`) must be verified against *all* other people to ensure they satisfy both conditions exactly.
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `Stack<Integer> s = new Stack<>();`
+    * Creates the Stack to hold potential celebrity indices.
+    * The subsequent `for` loop pushes all indices ($\mathbf{0}$ to $N-1$) onto the stack.
+
+2.  `while(s.size()>=2){ ... }`
+    * **Elimination Phase:** The loop runs until only one index remains.
+
+3.  `int a = s.pop(); int b = s.pop();`
+    * Picks two distinct people, $\mathbf{a}$ and $\mathbf{b}$, from the top of the stack.
+
+4.  `if(know(mat,a,b)){ s.push(b); }else{ s.push(a); }`
+    * **Decision Logic (using the `know` helper method, which just checks `mat[a][b] == 1`):**
+        * If $\mathbf{a}$ knows $\mathbf{b}$, $\mathbf{a}$ is eliminated (pushed $\mathbf{b}$ back).
+        * If $\mathbf{a}$ doesn't know $\mathbf{b}$, $\mathbf{b}$ is eliminated (pushed $\mathbf{a}$ back).
+
+5.  `if (s.isEmpty()) { return -1; } int candidate = s.pop();`
+    * Checks if the stack is empty (only possible if the initial size was $0$). Otherwise, sets the final remaining index as the `candidate`.
+
+6.  `for(int i=0; i<mat.length; i++){ ... }`
+    * **Verification Phase:** Checks the `candidate` against every other person $i$.
+
+7.  `if(!know(mat,i,candidate)){ return -1; }`
+    * **Condition 1 Check:** Ensures **everyone** ($i$) knows the `candidate`. If $i$ doesn't know the `candidate`, it's not a celebrity.
+
+8.  `if(know(mat,candidate,i)){ return -1; }`
+    * **Condition 2 Check:** Ensures the `candidate` **knows nobody else** ($i$). If the `candidate` knows $i$, it's not a celebrity. (The `i==candidate` case is safely skipped by the `continue`).
+
+9.  `return candidate;`
+    * If the loop completes without returning $-1$, the `candidate` has passed all checks and is the celebrity.

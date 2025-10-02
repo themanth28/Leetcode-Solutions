@@ -1,0 +1,45 @@
+https://www.geeksforgeeks.org/problems/next-larger-element-1587115620/1
+
+---
+
+### 1. Understanding the Question
+
+For every element in a given array, we need to find the **first element to its right** that is **larger** than it.
+
+* If such a larger element exists, we report its value.
+* If no larger element is found to the right, we report $\mathbf{-1}$.
+* The final result should be an array/list of these "next larger elements" for every number in the input array.
+
+---
+
+### 2. Intuition
+
+We'll iterate through the array **from right to left**. This is key because we are looking for something *to the right*.
+
+We use a **Stack** to store numbers that *might* be the next larger element for the numbers we haven't processed yet. We maintain a **decreasing order** in the stack (a **Monotonic Decreasing Stack**).
+
+1.  When we look at a new number, $\mathbf{A}$, from the right:
+    * Any number currently on the stack that is $\mathbf{\le A}$ **cannot** be the next larger element for $\mathbf{A}$ or any element to A's left (because $\mathbf{A}$ is a better candidate). So, we **pop** them.
+    * After popping the smaller/equal numbers, if the stack is **not empty**, the top element is the **first larger element** to A's right.
+    * If the stack **is empty**, there is no larger element to A's right, so the answer is $\mathbf{-1}$.
+2.  Finally, we push $\mathbf{A}$ onto the stack for elements further left to check against.
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `Stack<Integer> s = new Stack<>();`
+    * Creates a **Stack** to store elements we've seen on the right, maintaining a decreasing order (Monotonic Stack).
+2.  `int[] sol = new int[arr.length];`
+    * An array to store the results temporarily.
+3.  `for(int i=arr.length-1; i>=0; i--){ ... }`
+    * The loop iterates **backward** (from right to left), which is essential.
+4.  `while(!s.isEmpty() && s.peek()<=arr[i]){ s.pop(); }`
+    * This is the core logic: While the stack is not empty and the element at the top of the stack is **less than or equal to** the current array element (`arr[i]`), we **discard** (`pop`) the stack top. It's irrelevant now.
+5.  `if(s.isEmpty()){ sol[i] = -1; }`
+    * After popping, if the stack is empty, it means no element to the right was larger, so the result is $\mathbf{-1}$.
+6.  `else{ sol[i] = s.peek(); }`
+    * If the stack is not empty, the element remaining at the top (`s.peek()`) *must* be the **Next Larger Element**. We record it.
+7.  `s.push(arr[i]);`
+    * The current element (`arr[i]`) is **pushed** onto the stack. It now becomes a potential "next larger element" for numbers further to its left.
+8.  The final lines convert the result array `sol` into an `ArrayList` as required by the return type.

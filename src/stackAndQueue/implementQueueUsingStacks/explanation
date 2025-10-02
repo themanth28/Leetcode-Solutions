@@ -1,0 +1,46 @@
+https://leetcode.com/problems/implement-queue-using-stacks/description/
+
+---
+
+### 1. Understanding the Question
+
+The goal is to implement a **Queue's** behavior (First-In, First-Out, or **FIFO**) using only **Stacks** (Last-In, First-Out, or **LIFO**).
+
+* **Queue needed:** `push` (add to back), `pop` (remove from front), `peek` (look at front), `empty`.
+* **Tools available:** Standard Stack operations (`push`, `pop`, `peek`, `isEmpty`).
+
+---
+
+### 2. Intuition
+
+We use two stacks:
+1.  **Input Stack (`s1`):** Used primarily for the **`push`** operation (where new elements arrive).
+2.  **Output Stack (`s2`):** Used for the **`pop`** and **`peek`** operations (where elements should leave from the front).
+
+The trick is the **transfer**: When we need to remove or look at the front element (`pop` or `peek`), if the Output Stack (`s2`) is empty, we simply **move all elements** from the Input Stack (`s1`) to `s2`. This movement reverses the order, making the oldest element (the true "front" of the queue) ready to be popped from `s2`.
+
+---
+
+### 3. Code-wise Explanation
+
+1.  **`push(int x)`:**
+    * `s1.push(x);`
+    * **Simple:** New elements are always just placed onto the **Input Stack (`s1`)**.
+
+2.  **`pop()`:**
+    * `peek();`
+    * Calls `peek()` first. This **ensures** that the Output Stack (`s2`) is loaded and ready, with the oldest element at its top.
+    * `return s2.pop();`
+    * Removes and returns the element from the top of **`s2`** (which is the element we want to remove from the front of the queue).
+
+3.  **`peek()`:**
+    * `if(s2.isEmpty()){ ... }`
+    * **Crucial check:** We only do the expensive transfer if the **Output Stack (`s2`)** is currently empty.
+    * `while(!s1.isEmpty()){ s2.push(s1.pop()); }`
+    * This is the **transfer** step: Move everything from `s1` to `s2`. This reverses the order so the oldest element in the queue is now at the top of `s2`.
+    * `return s2.peek();`
+    * Returns the top element of **`s2`** (the front of the queue), without removing it.
+
+4.  **`empty()`:**
+    * `return s1.isEmpty() && s2.isEmpty();`
+    * The queue is empty only if **both** the Input and Output stacks have no elements.

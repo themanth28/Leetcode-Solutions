@@ -1,0 +1,79 @@
+https://www.hackerrank.com/contests/gl-bajaj-self-evaluation-contest/challenges/need-all-ones
+
+---
+
+### 1. Understanding the Question
+
+The overall goal is to find the area of the **Maximal Anchored Rectangle** within a binary matrix (`matrix`).
+
+* A binary matrix contains only $0$s and $1$s.
+* An **anchored rectangle** is defined here as a rectangle of $1$s that is "anchored" to the **bottom row** of the matrix. This means it can only extend upwards from a base of $1$s in the bottom row.
+* The solution structure:
+    1.  The `maximalAnchoredRectangle` function calculates the height of consecutive $1$s extending **upwards from the bottom** for each column, creating a `heights` array (a histogram).
+    2.  It then uses the `largestRectangleArea` function on this `heights` array to find the largest area within that histogram.
+
+---
+
+### 2. Intuition
+
+The problem is broken down into two main ideas:
+
+#### A. Building the Histogram (Anchoring)
+
+1.  For each column in the matrix, we calculate a bar's height.
+2.  The height is the count of consecutive $1$s in that column, starting from the **bottom row** and moving upwards.
+3.  If a $0$ is hit, the count stops. This constraint (starting from the bottom) is what makes it an "anchored" rectangle problem.
+4.  This creates a **histogram** where each bar's height is the max height of $1$s anchored at that column's base.
+
+#### B. Finding the Largest Rectangle in the Histogram
+
+1.  Once we have the `heights` array (the histogram), the largest rectangle within this histogram is found using the **Monotonic Stack** technique (implemented in `largestRectangleArea`).
+2.  The stack helps find the nearest bar that is **shorter** than the current bar, both to the left (NSL) and to the right (NSR), in $O(N)$ time. This gives the maximum width for which the current bar can be the limiting height.
+
+---
+
+### 3. Code-wise Explanation
+
+#### A. `maximalAnchoredRectangle(int[][] matrix, int n, int m)`
+
+1.  `int[] heights = new int[m];`
+    * Creates the array to store the heights of the histogram bars (one height for each column).
+
+2.  `for (int j = 0; j < m; j++) { ... for (int i = n - 1; i >= 0; i--) { ... } }`
+    * The outer loop iterates through **columns** ($j$).
+    * The inner loop iterates through rows **from the bottom** ($i = n-1$) **upwards** to $0$.
+
+3.  `if (matrix[i][j] == 1) { currentHeight++; } else { break; }`
+    * Counts consecutive $1$s upwards. **Breaks** immediately if a $0$ is encountered, enforcing the "anchored to the bottom" rule.
+
+4.  `heights[j] = currentHeight;`
+    * Stores the calculated height for column $j$.
+
+5.  `return largestRectangleArea(heights);`
+    * Passes the created histogram to the next function for calculation.
+
+#### B. `largestRectangleArea(int[] heights)` (Monotonic Stack)
+
+1.  `for (int j = 0; j <= n; j++) { ... }`
+    * Loops through the height array indices, including an extra index $\mathbf{j=n}$ to process remaining stack elements.
+
+2.  `int h = (j == n) ? 0 : heights[j];`
+    * Sets the current height $\mathbf{h}$ to $0$ for the final iteration, guaranteeing all bars on the stack are processed.
+
+3.  `while (!stack.isEmpty() && heights[stack.peek()] > h) { ... }`
+    * **Processing:** If the bar on the stack top is **taller** than the current height $\mathbf{h}$, the bar on the stack has found its **Next Smaller Element to the Right (NSR)** at index $\mathbf{j}$.
+
+4.  `int height = heights[stack.pop()];`
+    * Pops the bar to be processed and gets its height.
+
+5.  `int leftBoundary = stack.isEmpty() ? -1 : stack.peek();`
+    * After popping, the new stack top is the bar's **Next Smaller Element to the Left (NSL)**. If the stack is empty, the left boundary is effectively $-1$.
+
+6.  `int width = j - leftBoundary - 1;`
+    * Calculates the width: $\text{NSR} (\mathbf{j}) - \text{NSL} (\mathbf{leftBoundary}) - 1$.
+
+7.  `maxArea = Math.max(maxArea, height * width);`
+    * Updates the overall max area.
+
+8.  `stack.push(j);`
+    * Pushes the current index $\mathbf{j}$ onto the stack.

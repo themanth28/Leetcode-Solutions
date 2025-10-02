@@ -1,0 +1,58 @@
+https://leetcode.com/problems/largest-rectangle-in-histogram/description/
+
+---
+
+### 1. Understanding the Question
+
+The task is to find the area of the **largest rectangle** that can be drawn within a **histogram**.
+
+* The input is an array `heights`, where each value is the height of a bar.
+* Each bar has a uniform width of 1.
+* A rectangle's area is $\text{height} \times \text{width}$.
+* The key is that a rectangle can span across multiple bars, but its height is limited by the **shortest bar** it covers.
+
+---
+
+### 2. Intuition
+
+We want to find, for every bar, the **largest possible rectangle** that uses that bar as its $\mathbf{height}$.
+
+To do this efficiently, for any given bar (let its index be $i$), we need to quickly find:
+1.  **Next Smaller Element to the Left (NSL):** The index of the first bar to the left that is **shorter** than bar $i$.
+2.  **Next Smaller Element to the Right (NSR):** The index of the first bar to the right that is **shorter** than bar $i$.
+
+The width of the rectangle using bar $i$ as the height will be: $\text{NSR} - \text{NSL} - 1$.
+
+The Monotonic Stack approach cleverly calculates both NSL and NSR for every element in a **single pass** by iterating through the array and using a stack that stores **indices** of heights in increasing order (a **Monotonic Increasing Stack**).
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `int n = heights.length; Stack<Integer> stack = new Stack<>(); int maxArea = 0;`
+    * Initialize $n$ (length), the **Stack** (will store bar **indices**), and the result `maxArea`.
+
+2.  `for (int j = 0; j <= n; j++) { ... }`
+    * The loop iterates from $j=0$ up to and including **$n$** (one extra iteration). This extra pass is crucial to ensure all bars remaining in the stack are processed.
+
+3.  `int h = (j == n) ? 0 : heights[j];`
+    * Sets $h$ to the current bar's height. In the extra pass ($j=n$), $h$ is set to **0**. This zero-height effectively forces the processing of any remaining tall bars on the stack.
+
+4.  `while (!stack.isEmpty() && heights[stack.peek()] > h) { ... }`
+    * **Processing block (Monotonic Stack logic):** This runs as long as the stack isn't empty AND the bar at the top of the stack is **taller** than the current height $h$.
+    * If `heights[stack.peek()] > h`, it means the bar at `stack.peek()` has found its **Next Smaller Element to the Right (NSR)**, which is the current index, $\mathbf{j}$.
+
+5.  `int height = heights[stack.pop()];`
+    * The bar to be processed is popped. `height` is its height.
+
+6.  `int leftBoundary = stack.isEmpty() ? -1 : stack.peek();`
+    * After popping the current bar, the **new stack top** gives the index of the **Next Smaller Element to the Left (NSL)** for the processed bar. If the stack is empty, there is no smaller bar to the left, so we use index $\mathbf{-1}$.
+
+7.  `int width = j - leftBoundary - 1;`
+    * Calculates the width: $\text{NSR} (\mathbf{j}) - \text{NSL} (\mathbf{leftBoundary}) - 1$. This is the full range the rectangle can extend.
+
+8.  `maxArea = Math.max(maxArea, height * width);`
+    * Updates the overall maximum area found so far.
+
+9.  `stack.push(j);`
+    * The current index $\mathbf{j}$ is pushed onto the stack. This maintains the stack's property: indices of increasing heights.

@@ -1,0 +1,72 @@
+https://leetcode.com/problems/sum-of-subarray-minimums/description/
+
+***
+
+### 1. Understanding the Question
+
+The task is to find the **sum of the minimums of all possible contiguous subarrays** of a given array $\mathbf{arr}$. Since the total sum can be very large, the result must be returned modulo $10^9 + 7$.
+
+For an array like $[3, 1, 2, 4]$:
+* Subarrays: $[3]$, $[1]$, $[2]$, $[4]$, $[3, 1]$, $[1, 2]$, $[2, 4]$, $[3, 1, 2]$, $[1, 2, 4]$, $[3, 1, 2, 4]$.
+* Their minimums: $3, 1, 2, 4, 1, 1, 2, 1, 1, 1$.
+* The sum is $3+1+2+4+1+1+2+1+1+1 = 17$.
+
+We need an efficient way to calculate this sum.
+
+***
+
+### 2. Intuition
+
+Instead of iterating through all subarrays and finding their minimums (which is slow, $O(N^3)$ or $O(N^2)$), we should iterate through each element $\mathbf{arr[i]}$ and determine **how many subarrays** treat $\mathbf{arr[i]}$ as their minimum element.
+
+For a bar $\mathbf{arr[i]}$ to be the minimum of a subarray, that subarray must start **after** the first element to the left that is **smaller than** $\mathbf{arr[i]}$ and end **before** the first element to the right that is **smaller than** $\mathbf{arr[i]}$.
+
+1.  **Find $\mathbf{p[i]}$ (Previous Smaller Element):** The index of the nearest element to the left that is **strictly less than** $\mathbf{arr[i]}$. If none exists, we use index $-1$.
+2.  **Find $\mathbf{n[i]}$ (Next Smaller Element):** The index of the nearest element to the right that is **less than or equal to** $\mathbf{arr[i]}$. If none exists, we use index $N$. *(Note: We use $\le$ here and $\lt$ for previous to correctly handle duplicate values and avoid overcounting.)*
+3.  The number of positions the subarray can start is $i - p[i]$ (call this **L**).
+4.  The number of positions the subarray can end is $n[i] - i$ (call this **R**).
+5.  The total number of subarrays where $\mathbf{arr[i]}$ is the minimum is $\mathbf{L \times R}$.
+6.  The contribution of $\mathbf{arr[i]}$ to the total sum is $\mathbf{arr[i] \times L \times R}$.
+
+We sum up these contributions for all $i$. The Monotonic Stack finds $\mathbf{p[i]}$ and $\mathbf{n[i]}$ efficiently in $O(N)$ time.
+
+***
+
+### 3. Code-wise Explanation
+
+The solution relies on two helper functions, `prev` and `next`, both using a **Monotonic Stack** to find the boundaries in $O(N)$.
+
+#### Helper Functions (`prev` and `next`)
+
+* **`prev(int[] a)` (Previous Smaller Element to the Left - PSLE):**
+    * Iterates **left-to-right** ($i=0$ to $n-1$).
+    * **Stack Logic:** While the stack is not empty and the element at the index on the stack (`a[s.peek()]`) is **greater than** the current element (`a[i]`), we pop the stack. These popped elements can't be the PSLE for any element to their right, because `a[i]` is a better, closer candidate.
+    * **Result:** If the stack is empty, there is no smaller element to the left (`res[i] = -1`). Otherwise, the index at the top of the stack is the required PSLE (`res[i] = s.peek()`).
+    * Pushes the current index `i` onto the stack.
+
+* **`next(int[] a)` (Next Smaller/Equal Element to the Right - NSER):**
+    * Iterates **right-to-left** ($i=n-1$ to $0$).
+    * **Stack Logic:** While the stack is not empty and the element at the index on the stack (`a[s.peek()]`) is **greater than or equal to** the current element (`a[i]`), we pop. We use $\mathbf{\ge}$ here to handle duplicates correctly.
+    * **Result:** If the stack is empty, there is no smaller element to the right (`res[i] = n`). Otherwise, the index at the top of the stack is the required NSER (`res[i] = s.peek()`).
+    * Pushes the current index `i` onto the stack.
+
+#### Main Function (`sumSubarrayMins`)
+
+1.  `int[] p = prev(arr); int[] n = next(arr);`
+    * Calls the helper functions to calculate the PSLE and NSER arrays for all elements.
+
+2.  `for(int i=0; i<le; i++){ ... }`
+    * Loop through every element in the array.
+
+3.  `long l = i-p[i];`
+    * Calculates the number of possible **start positions** for subarrays: $i$ minus the index of the first smaller element to the left.
+
+4.  `long r = n[i]-i;`
+    * Calculates the number of possible **end positions** for subarrays: the index of the first smaller element to the right minus $i$.
+
+5.  `ans = (ans + arr[i] * l * r) % ((int) 1e9 + 7);`
+    * Calculates the total contribution of `arr[i]`: $\text{value} \times (\text{left options}) \times (\text{right options})$.
+    * **Modulo Arithmetic:** The calculation is immediately taken modulo $10^9 + 7$ to prevent integer overflow. We use `long` for intermediate calculation to be safe.
+
+6.  `return (int) ans;`
+    * Returns the final sum cast back to an `int`.

@@ -1,0 +1,52 @@
+https://leetcode.com/problems/sliding-window-maximum/description/
+
+***
+
+### 1. Understanding the Question
+
+The goal is to find the **maximum value** within every contiguous **sliding window** of size $\mathbf{k}$ across a given array $\mathbf{nums}$.
+
+* The window slides one position to the right at a time.
+* The output should be an array where each element is the maximum of the corresponding window.
+
+Example: `nums = [1, 3, -1, -3, 5, 3, 6, 7]`, $\mathbf{k=3}$.
+Windows and their max:
+* $[1, 3, -1]$ $\rightarrow$ max is $\mathbf{3}$
+* $[3, -1, -3]$ $\rightarrow$ max is $\mathbf{3}$
+* $[-1, -3, 5]$ $\rightarrow$ max is $\mathbf{5}$
+* $\dots$
+
+---
+
+### 2. Intuition
+
+A naive approach would re-scan each window, taking $O(N \times k)$ time. We need an $O(N)$ solution.
+
+We use a **Deque** (a queue that allows adding/removing from both ends) to store the **indices** of elements. We maintain the invariant that the deque is always **Monotonically Decreasing** in terms of the values at those indices.
+
+1.  **Maintain Monotonicity:** When a new element $\mathbf{nums[i]}$ arrives: we pop elements from the **back** of the deque that are **smaller** than $\mathbf{nums[i]}$. This ensures that the largest element within the current range is always prioritized at the front.
+2.  **Maintain Window Size:** We check if the index at the **front** of the deque is $\mathbf{i-k}$. If it is, that element is now out of the current window, so we pop it from the **front**.
+3.  **Result:** The element at the very **front** of the deque is always the maximum element in the current window. We record this maximum once the window is fully formed ($\mathbf{i \ge k-1}$).
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `Deque<Integer> q = new ArrayDeque<>();`
+    * Creates the Double-Ended Queue (Deque) to store **indices**.
+
+2.  `for(int i=0; i<n; i++){ ... }`
+    * The loop iterates through the array, processing one element at a time.
+
+3.  `while(!q.isEmpty() && nums[q.peekLast()] <= nums[i]){ q.removeLast(); }`
+    * **Monotonicity (Back Removal):** This implements the core greedy logic. If the current element $\mathbf{nums[i]}$ is greater than or equal to the element at the back of the queue, the element at the back is useless because $\mathbf{nums[i]}$ is larger and will remain in the window for longer. We **remove it from the back**.
+
+4.  `q.addLast(i);`
+    * Add the current index $\mathbf{i}$ to the back of the queue.
+
+5.  `if(q.peekFirst() == i-k){ q.removeFirst(); }`
+    * **Window Boundary (Front Removal):** If the index at the front of the queue is $\mathbf{i-k}$ (meaning it fell out of the window of size $k$), we **remove it from the front**.
+
+6.  `if(i >= k-1){ res[i-k+1] = nums[q.peekFirst()]; }`
+    * **Recording Result:** The window is complete when $i$ reaches index $\mathbf{k-1}$ or beyond. The maximum element's index is always `q.peekFirst()`. We store the actual value $\mathbf{nums[q.peekFirst()]}$ into the result array `res`.
+    * **Result Index:** The result index $\mathbf{i-k+1}$ correctly maps the current window's max to the result array position.

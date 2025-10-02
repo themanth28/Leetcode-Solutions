@@ -1,0 +1,51 @@
+https://leetcode.com/problems/shortest-subarray-with-sum-at-least-k/description/
+
+***
+
+### 1. Understanding the Question
+
+The goal is to find the **length of the shortest contiguous subarray** in $\mathbf{nums}$ such that the **sum of its elements is greater than or equal to $\mathbf{k}$**.
+
+* If no such subarray exists, return $\mathbf{-1}$.
+* We are looking for the minimum possible length.
+
+---
+
+### 2. Intuition
+
+A subarray sum $\mathbf{nums[i..j]}$ is equal to the difference in prefix sums: $\mathbf{P[j+1] - P[i]}$, where $P$ is the prefix sum array. We want to find the shortest distance $\mathbf{j - i}$ such that $\mathbf{P[j+1] - P[i] \ge k}$, or $\mathbf{P[i] \le P[j+1] - k}$.
+
+For a fixed ending index $j+1$, we need to find the earliest possible starting index $\mathbf{i}$ such that the condition is met. This means we are looking for the **smallest $\mathbf{P[i]}$** that satisfies $\mathbf{P[i] \le P[j+1] - k}$.
+
+We use a **Monotonic Increasing Deque** to store the indices of the prefix sum array $P$. This deque maintains the following properties:
+
+1.  **Finding the Shortest Length (Front Check):** If $\mathbf{P[i] - P[q.peekFirst()] \ge k}$, we have found a valid subarray. Since the deque is **monotonically increasing** in terms of prefix sums (property 2), and we are processing $i$ sequentially, $\mathbf{q.peekFirst()}$ represents the **oldest (earliest) valid start index**. This gives the shortest length for the current $i$. We update the result and pop the front index, as any further $i$ will only yield a longer subarray with that start.
+
+2.  **Maintaining Monotonicity (Back Cleanup):** If $\mathbf{P[i] \le P[q.peekLast()]}$, the index at the back of the queue is useless. Why? Because $\mathbf{i}$ is a *later* index but has a *smaller* (or equal) prefix sum. If an index $j$ needs an earlier start index with a small prefix sum, $i$ is a better candidate than $q.peekLast()$ since $i$ is closer to $j$ and has an equally good (or better) sum. So, we **pop from the back** to maintain the increasing property.
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `long[] p = new long[n+1];`
+    * Creates the **Prefix Sum Array** $\mathbf{P}$. It's size $n+1$ to handle $P[0]=0$ (the sum of zero elements). Uses `long` to prevent overflow, as element values can be large.
+
+2.  `for(int i=0; i<n; i++){ p[i+1] = p[i] + nums[i]; }`
+    * Populates the prefix sum array: $\mathbf{P[i]}$ stores the sum of $\mathbf{nums[0..i-1]}$.
+
+3.  `for(int i=0; i<=n; i++){ ... }`
+    * The main loop iterates through the prefix sum array $\mathbf{P}$. Index $i$ is treated as the **end index $+1$** of the potential subarray.
+
+4.  `while(!q.isEmpty() && p[i] - p[q.peekFirst()] >= k){ ... }`
+    * **Front Check (Finding the Result):** Checks if the subarray sum $\mathbf{P[i] - P[q.peekFirst()]}$ meets the $\mathbf{k}$ threshold.
+        * `res = Math.min(i-q.peekFirst(), res);`: Updates the minimum length found so far (current end index $i$ minus the start index $q.peekFirst()$).
+        * `q.removeFirst();`: Removes the start index because we have found the shortest subarray ending at $i$. Any future end index $j > i$ starting from $q.peekFirst()$ would be longer than the current $res$ and is thus irrelevant.
+
+5.  `while(!q.isEmpty() && p[i] <= p[q.peekLast()]){ q.removeLast(); }`
+    * **Back Cleanup (Maintaining Monotonicity):** Removes indices from the back if their prefix sum is greater than or equal to the current one. The older index with the larger prefix sum is useless for future calculations.
+
+6.  `q.addLast(i);`
+    * Add the current index $\mathbf{i}$ to the deque.
+
+7.  `return res <= n ? res : -1;`
+    * Returns the final minimum length. If `res` is still the initialized value of $n+1$, no valid subarray was found, so return $\mathbf{-1}$.

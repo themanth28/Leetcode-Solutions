@@ -1,0 +1,68 @@
+
+***
+
+### 1. Understanding the Question
+
+The goal is to calculate the **sum of the minimum values** found in **every possible continuous subarray** of the input array $\mathbf{arr}$. The final sum must be returned modulo $10^9 + 7$ due to the potential for large results.
+
+For an element $\mathbf{arr[i]}$, we want to find out **how many subarrays** exist where $\mathbf{arr[i]}$ is the smallest element.
+
+---
+
+### 2. Intuition
+
+Instead of listing all subarrays, we count the contribution of *each element* to the total sum.
+
+For a fixed element $\mathbf{arr[i]}$ to be the minimum of a subarray, that subarray must:
+1.  Start at an index $\mathbf{p} > \text{PSLE}[i]$ (Previous Smaller or Equal Element).
+2.  End at an index $\mathbf{n} < \text{NSE}[i]$ (Next Smaller Element).
+
+We use two helper functions, powered by a **Monotonic Stack**, to find these boundaries quickly:
+
+* **PSLE (`getPrevSmaller`):** Finds the index of the nearest element to the left that is **smaller than or equal to** $\mathbf{arr[i]}$.
+* **NSE (`getNextSmaller`):** Finds the index of the nearest element to the right that is **strictly smaller than** $\mathbf{arr[i]}$.
+
+This technique (using $\le$ on one side and $<$ on the other) correctly handles **duplicate minimum values** and prevents any subarray from being counted more than once.
+
+The count of subarrays for which $\mathbf{arr[i]}$ is the minimum is $\mathbf{L \times R}$, where:
+* $\mathbf{L}$ (left count) = $i - \text{PSLE}[i]$
+* $\mathbf{R}$ (right count) = $\text{NSE}[i] - i$
+
+Total sum is $\sum (\mathbf{arr[i]} \times \mathbf{L} \times \mathbf{R}) \pmod{MOD}$.
+
+---
+
+### 3. Code-wise Explanation
+
+#### A. Helper: `getPrevSmaller(int[] arr)` (PSLE)
+
+* **Goal:** Find the index of the **Previous Smaller or Equal Element** (PSLE).
+* **Stack Behavior:** The stack holds indices of elements in **increasing order of value**. When `arr[i]` is processed:
+    * `while (!stack.isEmpty() && arr[stack.peek()] > arr[i])`: Elements on the stack that are **greater than** $\mathbf{arr[i]}$ are popped. $\mathbf{arr[i]}$ is closer and smaller, making the popped elements irrelevant as PSLEs for anything to their right.
+    * `prev[i] = stack.isEmpty() ? -1 : stack.peek();`: The element remaining at the top is the PSLE. We use $\mathbf{-1}$ if the stack is empty (no smaller element exists).
+    * `stack.push(i);`: Pushes the current index.
+
+#### B. Helper: `getNextSmaller(int[] arr)` (NSE)
+
+* **Goal:** Find the index of the **Next Smaller Element** (NSE).
+* **Stack Behavior:** The loop runs **backward** (right-to-left).
+    * `while (!stack.isEmpty() && arr[stack.peek()] >= arr[i])`: Elements on the stack that are **greater than or equal to** $\mathbf{arr[i]}$ are popped. $\mathbf{arr[i]}$ is the better, closer NSE candidate. We use $\mathbf{\ge}$ here to handle duplicates and prevent overcounting.
+    * `next[i] = stack.isEmpty() ? n : stack.peek();`: The index remaining at the top is the NSE. We use $\mathbf{n}$ (the array length) if the stack is empty (no smaller element exists to the right).
+    * `stack.push(i);`: Pushes the current index.
+
+#### C. Main Function: `sumSubarrayMins(int[] arr)`
+
+1.  `int[] prev = getPrevSmaller(arr); int[] next = getNextSmaller(arr);`
+    * Calculate the boundary arrays.
+
+2.  `for (int i = 0; i < n; i++) { ... }`
+    * Iterate through every element $\mathbf{arr[i]}$.
+
+3.  `long left = i - prev[i]; long right = next[i] - i;`
+    * Calculate the contribution counts: $\mathbf{L}$ is the number of valid starting points (including $i$), and $\mathbf{R}$ is the number of valid ending points (including $i$).
+
+4.  `result = (result + arr[i] * left * right) % MOD;`
+    * Calculate the contribution ($\text{value} \times \text{count}$) and add it to the running `result`, taking the modulo $\mathbf{MOD}$ at each step to prevent overflow. `long` is used for intermediate calculations to ensure accuracy.
+
+5.  `return (int) result;`
+    * Returns the final sum.

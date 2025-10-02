@@ -1,0 +1,47 @@
+https://leetcode.com/problems/last-stone-weight/description/
+
+### 1. Understanding the Question
+
+The core task is to simulate a process of smashing **two heaviest stones** together repeatedly.
+
+* If the stones are the same weight, both are destroyed.
+* If they are different weights ($x$ and $y$, where $x \ge y$), the lighter one ($y$) is destroyed, and the heavier one ($x$) is reduced to weight $x-y$.
+* We keep doing this until at most **one stone** is left. We need to return the weight of that final stone, or $0$ if none are left.
+
+---
+
+### 2. Intuition
+
+To always find the **two heaviest** stones quickly, we should use a **Max Heap** (a Priority Queue set up to prioritize the largest numbers).
+
+1.  Put all stone weights into the Max Heap.
+2.  While the heap has two or more stones, take the largest two, smash them, and put the difference (the remainder) back into the heap if it's not zero.
+3.  The final remaining item (or $0$) is the answer.
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `PriorityQueue<Integer> heap = new PriorityQueue<>((a,b) -> b-a);`
+    * This creates a **Max Heap**. The special part `(a,b) -> b-a` tells the Priority Queue to sort elements in **descending** order (so the largest is always at the top).
+
+2.  `for(int i=0; i<stones.length; i++){ heap.add(stones[i]); }`
+    * Adds **all stone weights** from the input array into the Max Heap.
+
+3.  `while(heap.size()>1){ ... }`
+    * The main loop continues as long as there are **at least two** stones left to smash.
+
+4.  `int t1 = heap.poll();`
+    * Removes and returns the **largest** stone weight ($t1$).
+
+5.  `int t2 = heap.poll();`
+    * Removes and returns the **second largest** stone weight ($t2$).
+
+6.  `int diff = Math.abs(t1-t2);`
+    * Calculates the weight of the **remaining piece** after the smash. (Since $t1$ is always $\ge t2$, `t1 - t2` works, but `Math.abs` is a safe practice).
+
+7.  `if(diff!=0){ heap.add(diff); }`
+    * If the difference is not zero (meaning a piece is left), put this **new stone** back into the heap.
+
+8.  `if(heap.size()!=0){ return heap.poll(); }else{ return 0; }`
+    * After the loop, checks if **one stone** is left. If the heap is not empty, return its weight (`heap.poll()`). Otherwise, return $0$.
