@@ -1,5 +1,7 @@
 package linkedList.palindromeLinkedList;
 
+import linkedList.addTwoNumbersII.ListNode;
+
 /**
  * Definition for singly-linked list.
  * public class ListNode {
