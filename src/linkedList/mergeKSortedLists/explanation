@@ -1,2 +1,52 @@
 https://leetcode.com/problems/merge-k-sorted-lists/description/
 
+***
+
+### 1. Understanding the Question
+
+The goal is to **merge $\mathbf{k}$ separate sorted linked lists** into a single, combined, and **sorted** linked list.
+
+* Input: An array `lists` where each element is the head of a sorted linked list.
+* Output: The head of one final sorted linked list containing all nodes from the input lists.
+
+---
+
+### 2. Intuition
+
+To ensure the final list is sorted, we must always pick the **smallest available node** from the heads of all $k$ lists.
+
+A **Min Heap (Priority Queue)** is the perfect tool for this:
+1.  Initialize the Min Heap with the **first node (head)** of every input list.
+2.  The Min Heap always keeps the node with the smallest value at the top.
+3.  Repeatedly:
+    * **Extract** the smallest node from the heap.
+    * **Append** this node to our result list.
+    * If the extracted node has a **`next`** node, insert that `next` node into the heap (because it's the next smallest candidate from that specific list).
+
+This process guarantees that we always append the next smallest value globally until the heap is empty.
+
+---
+
+### 3. Code-wise Explanation
+
+1.  `PriorityQueue<ListNode> p = new PriorityQueue<>((a, b) -> a.val - b.val);`
+    * Creates a **Min Heap** (Priority Queue). The custom comparator `(a, b) -> a.val - b.val` tells the heap to order the `ListNode` objects based on their **`val`** in **ascending** order (smallest value at the top).
+
+2.  `for(ListNode n : lists){ if(n!=null){ p.add(n); } }`
+    * **Initialization:** Iterates through the input array `lists`. For every non-empty list, its **head node** is added to the Min Heap. The heap now contains the smallest node from each of the $k$ lists.
+
+3.  `ListNode head = new ListNode(-1); ListNode cur = head;`
+    * Creates a dummy **`head`** node (with value -1) to simplify the insertion logic. `cur` (current) pointer tracks the end of the merged list.
+
+4.  `while(!p.isEmpty()){ ... }`
+    * **Merging Loop:** Continues as long as there are nodes available in the heap.
+
+5.  `ListNode c = p.poll(); cur.next = c; cur = cur.next;`
+    * **Extraction:** Gets and removes the node with the **smallest value** (`c`) from the heap.
+    * **Appending:** Appends `c` to the result list by setting `cur.next = c`, and then advances the `cur` pointer to `c`.
+
+6.  `if(c.next != null){ p.offer(c.next); }`
+    * **Re-insertion:** If the extracted node `c` has a `next` node (meaning its list is not finished), that $\mathbf{c.next}$ node is inserted back into the heap. This maintains the heap property: it now holds the smallest available node from the list that `c` came from.
+
+7.  `return head.next;`
+    * Returns the node *after* the dummy head, which is the true head of the merged sorted list.
